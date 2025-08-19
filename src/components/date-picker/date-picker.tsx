@@ -1,28 +1,32 @@
-import React, { forwardRef, useCallback, useMemo } from 'react'
-import type { ReactNode } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import Picker from '../picker'
+import type { ReactNode } from 'react'
+import React, { forwardRef, useCallback, useMemo } from 'react'
+import { bound } from '../../utils/bound'
+import { NativeProps, withNativeProps } from '../../utils/native-props'
+import { usePropsValue } from '../../utils/use-props-value'
+import { mergeProps } from '../../utils/with-default-props'
+import type { RenderLabel } from '../date-picker-view/date-picker-view'
+import useRenderLabel from '../date-picker-view/useRenderLabel'
 import type {
+  PickerActions,
+  PickerColumn,
   PickerProps,
   PickerRef,
-  PickerActions,
   PickerValue,
-  PickerColumn,
 } from '../picker'
-import { NativeProps, withNativeProps } from '../../utils/native-props'
-import { mergeProps } from '../../utils/with-default-props'
-import { usePropsValue } from '../../utils/use-props-value'
+import Picker from '../picker'
+import type {
+  DateFieldsOrder,
+  DatePickerFilter,
+  Precision,
+} from './date-picker-utils'
 import {
   convertDateToStringArray,
   convertStringArrayToDate,
   generateDatePickerColumns,
 } from './date-picker-utils'
-import type { Precision, DatePickerFilter } from './date-picker-utils'
-import { bound } from '../../utils/bound'
-import useRenderLabel from '../date-picker-view/useRenderLabel'
-import type { RenderLabel } from '../date-picker-view/date-picker-view'
-import { TILL_NOW } from './util'
 import type { PickerDate } from './util'
+import { TILL_NOW } from './util'
 
 export type DatePickerRef = PickerRef
 
@@ -58,6 +62,7 @@ export type DatePickerProps = Pick<
   renderLabel?: RenderLabel
   filter?: DatePickerFilter
   tillNow?: boolean
+  fields?: DateFieldsOrder
 } & NativeProps
 
 const thisYear = new Date().getFullYear()
@@ -67,6 +72,7 @@ const defaultProps = {
   max: new Date(new Date().setFullYear(thisYear + 10)),
   precision: 'day',
   defaultValue: null as PickerDate | null,
+  fields: 'YMD',
 }
 
 export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
@@ -97,19 +103,23 @@ export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
       date = new Date(
         bound(date.getTime(), props.min.getTime(), props.max.getTime())
       )
-      return convertDateToStringArray(date, props.precision)
+      return convertDateToStringArray(date, props.precision, props.fields)
     }, [value, props.precision, props.min, props.max])
 
     const onConfirm = useCallback(
       (val: PickerValue[]) => {
-        const date = convertStringArrayToDate(val, props.precision)
+        const date = convertStringArrayToDate(
+          val,
+          props.precision,
+          props.fields
+        )
         setValue(date, true)
       },
-      [setValue, props.precision]
+      [setValue, props.precision, props.fields]
     )
 
     const onSelect = useMemoizedFn((val: PickerValue[]) => {
-      const date = convertStringArrayToDate(val, props.precision)
+      const date = convertStringArrayToDate(val, props.precision, props.fields)
       props.onSelect?.(date)
     })
 
@@ -122,9 +132,17 @@ export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
           props.precision,
           mergedRenderLabel,
           props.filter,
-          props.tillNow
+          props.tillNow,
+          props.fields
         ),
-      [props.min, props.max, props.precision, mergedRenderLabel, props.tillNow]
+      [
+        props.min,
+        props.max,
+        props.precision,
+        mergedRenderLabel,
+        props.tillNow,
+        props.fields,
+      ]
     )
 
     return withNativeProps(

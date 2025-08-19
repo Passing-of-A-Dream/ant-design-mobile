@@ -4,6 +4,7 @@ import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProps } from '../../utils/with-default-props'
 import type {
+  DateFieldsOrder,
   DatePickerFilter,
   Precision,
 } from '../date-picker/date-picker-utils'
@@ -39,6 +40,7 @@ export type DatePickerViewProps = Pick<
   renderLabel?: RenderLabel
   filter?: DatePickerFilter
   tillNow?: boolean
+  fields?: DateFieldsOrder
 } & NativeProps
 
 const thisYear = new Date().getFullYear()
@@ -65,18 +67,18 @@ export const DatePickerView: FC<DatePickerViewProps> = p => {
       return [TILL_NOW, null, null]
     }
 
-    return convertDateToStringArray(value, props.precision)
-  }, [value, props.precision])
+    return convertDateToStringArray(value, props.precision, props.fields)
+  }, [value, props.precision, props.fields])
 
   const onChange = useCallback(
     (val: PickerValue[]) => {
-      const date = convertStringArrayToDate(val, props.precision)
+      const date = convertStringArrayToDate(val, props.precision, props.fields)
       if (date) {
         setValue(date)
         props.onChange?.(date)
       }
     },
-    [props.onChange, props.precision]
+    [props.onChange, props.precision, props.fields]
   )
 
   return withNativeProps(
@@ -90,7 +92,8 @@ export const DatePickerView: FC<DatePickerViewProps> = p => {
           props.precision,
           mergedRenderLabel,
           props.filter,
-          props.tillNow
+          props.tillNow,
+          props.fields
         )
       }
       loading={props.loading}

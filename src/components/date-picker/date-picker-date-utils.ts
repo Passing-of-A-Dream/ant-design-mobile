@@ -4,7 +4,7 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 import isoWeeksInYear from 'dayjs/plugin/isoWeeksInYear'
 import { RenderLabel } from '../date-picker-view/date-picker-view'
 import { PickerColumn } from '../picker'
-import type { DatePickerFilter } from './date-picker-utils'
+import type { DateFieldsOrder, DatePickerFilter } from './date-picker-utils'
 import { TILL_NOW } from './util'
 
 dayjs.extend(isoWeek)
@@ -35,7 +35,8 @@ export function generateDatePickerColumns(
   precision: DatePrecision,
   renderLabel: RenderLabel,
   filter: DatePickerFilter | undefined,
-  tillNow?: boolean
+  tillNow?: boolean,
+  fields?: DateFieldsOrder
 ) {
   const ret: PickerColumn[] = []
 
@@ -55,12 +56,30 @@ export function generateDatePickerColumns(
 
   const rank = precisionRankRecord[precision]
 
-  const selectedYear = parseInt(selected[0])
+  // Support reordered Y/M/D in selected by mapping back to fixed order indices
+  const order: ('year' | 'month' | 'day')[] = (() => {
+    if (!fields) return ['year', 'month', 'day']
+    if (Array.isArray(fields)) return fields
+    if (fields === 'MDY') return ['month', 'day', 'year']
+    if (fields === 'DMY') return ['day', 'month', 'year']
+    return ['year', 'month', 'day']
+  })()
+  const idx = {
+    year: order.indexOf('year'),
+    month: order.indexOf('month'),
+    day: order.indexOf('day'),
+  }
+  const safe = (i: number) => (Number.isFinite(i) && i >= 0 ? i : 0)
+  const yStr = selected[safe(idx.year)] ?? selected[0]
+  const mStr = selected[safe(idx.month)] ?? selected[1]
+  const dStr = selected[safe(idx.day)] ?? selected[2]
+
+  const selectedYear = parseInt(yStr)
   const firstDayInSelectedMonth = dayjs(
-    convertStringArrayToDate([selected[0], selected[1], '1'])
+    convertStringArrayToDate([yStr, mStr, '1'])
   )
-  const selectedMonth = parseInt(selected[1])
-  const selectedDay = parseInt(selected[2])
+  const selectedMonth = parseInt(mStr)
+  const selectedDay = parseInt(dStr)
   const selectedHour = parseInt(selected[3])
   const selectedMinute = parseInt(selected[4])
   const selectedSecond = parseInt(selected[5])
@@ -85,13 +104,29 @@ export function generateDatePickerColumns(
     for (let i = from; i <= to; i++) {
       column.push(i)
     }
-    const prefix = selected.slice(0, precisionRankRecord[precision])
+    const buildStringArrayFor = (p: DatePrecision, val: number): string[] => {
+      const v = val.toString()
+      switch (p) {
+        case 'year':
+          return [v]
+        case 'month':
+          return [yStr, v]
+        case 'day':
+          return [yStr, mStr, v]
+        case 'hour':
+          return [yStr, mStr, dStr, v]
+        case 'minute':
+          return [yStr, mStr, dStr, selected[3] ?? '0', v]
+        case 'second':
+          return [yStr, mStr, dStr, selected[3] ?? '0', selected[4] ?? '0', v]
+      }
+    }
     const currentFilter = filter?.[precision]
     if (currentFilter && typeof currentFilter === 'function') {
       column = column.filter(i =>
         currentFilter(i, {
           get date() {
-            const stringArray = [...prefix, i.toString()]
+            const stringArray = buildStringArrayFor(precision, i)
             return convertStringArrayToDate(stringArray)
           },
         })
@@ -100,39 +135,56 @@ export function generateDatePickerColumns(
     return column
   }
 
+  let yearCol: PickerColumn | null = null
   if (rank >= precisionRankRecord.year) {
     const lower = minYear
     const upper = maxYear
     const years = generateColumn(lower, upper, 'year')
-    ret.push(
-      years.map(v => ({
-        label: renderLabel('year', v, { selected: selectedYear === v }),
-        value: v.toString(),
-      }))
-    )
+    yearCol = years.map(v => ({
+      label: renderLabel('year', v, { selected: selectedYear === v }),
+      value: v.toString(),
+    }))
   }
 
+  let monthCol: PickerColumn | null = null
   if (rank >= precisionRankRecord.month) {
     const lower = isInMinYear ? minMonth : 1
     const upper = isInMaxYear ? maxMonth : 12
     const months = generateColumn(lower, upper, 'month')
-    ret.push(
-      months.map(v => ({
-        label: renderLabel('month', v, { selected: selectedMonth === v }),
-        value: v.toString(),
-      }))
-    )
+    monthCol = months.map(v => ({
+      label: renderLabel('month', v, { selected: selectedMonth === v }),
+      value: v.toString(),
+    }))
   }
+  let dayCol: PickerColumn | null = null
   if (rank >= precisionRankRecord.day) {
     const lower = isInMinMonth ? minDay : 1
     const upper = isInMaxMonth ? maxDay : firstDayInSelectedMonth.daysInMonth()
     const days = generateColumn(lower, upper, 'day')
-    ret.push(
-      days.map(v => ({
-        label: renderLabel('day', v, { selected: selectedDay === v }),
-        value: v.toString(),
-      }))
-    )
+    dayCol = days.map(v => ({
+      label: renderLabel('day', v, { selected: selectedDay === v }),
+      value: v.toString(),
+    }))
+  }
+  // push date columns according to fields order
+  const fieldsOrder: ('year' | 'month' | 'day')[] = (() => {
+    if (!fields) return ['year', 'month', 'day']
+    if (Array.isArray(fields)) return fields
+    if (fields === 'MDY') return ['month', 'day', 'year']
+    if (fields === 'DMY') return ['day', 'month', 'year']
+    return ['year', 'month', 'day']
+  })()
+  const available: Array<{
+    key: 'year' | 'month' | 'day'
+    col: PickerColumn | null
+  }> = [
+    { key: 'year', col: yearCol },
+    { key: 'month', col: monthCol },
+    { key: 'day', col: dayCol },
+  ]
+  for (const key of fieldsOrder) {
+    const found = available.find(a => a.key === key)
+    if (found?.col) ret.push(found.col)
   }
   if (rank >= precisionRankRecord.hour) {
     const lower = isInMinDay ? minHour : 0
