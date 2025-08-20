@@ -28,6 +28,23 @@ const precisionRankRecord: Record<DatePrecision, number> = {
   second: 5,
 }
 
+const parseFieldsOrder = (
+  fields?: Array<'year' | 'month' | 'day'> | string
+): ('year' | 'month' | 'day')[] => {
+  const DEFAULT_ORDER: ('year' | 'month' | 'day')[] = ['year', 'month', 'day']
+
+  if (!fields) return DEFAULT_ORDER
+  if (Array.isArray(fields)) return fields
+
+  const STRING_FORMAT_MAP: Record<string, ('year' | 'month' | 'day')[]> = {
+    'MDY': ['month', 'day', 'year'],
+    'DMY': ['day', 'month', 'year'],
+    'YMD': ['year', 'month', 'day'],
+  }
+
+  return STRING_FORMAT_MAP[fields] || DEFAULT_ORDER
+}
+
 export function generateDatePickerColumns(
   selected: string[],
   min: Date,
@@ -56,23 +73,17 @@ export function generateDatePickerColumns(
 
   const rank = precisionRankRecord[precision]
 
-  // Support reordered Y/M/D in selected by mapping back to fixed order indices
-  const order: ('year' | 'month' | 'day')[] = (() => {
-    if (!fields) return ['year', 'month', 'day']
-    if (Array.isArray(fields)) return fields
-    if (fields === 'MDY') return ['month', 'day', 'year']
-    if (fields === 'DMY') return ['day', 'month', 'year']
-    return ['year', 'month', 'day']
-  })()
+  const order: ('year' | 'month' | 'day')[] = parseFieldsOrder(fields)
   const idx = {
     year: order.indexOf('year'),
     month: order.indexOf('month'),
     day: order.indexOf('day'),
   }
-  const safe = (i: number) => (Number.isFinite(i) && i >= 0 ? i : 0)
-  const yStr = selected[safe(idx.year)] ?? selected[0]
-  const mStr = selected[safe(idx.month)] ?? selected[1]
-  const dStr = selected[safe(idx.day)] ?? selected[2]
+  const yStr =
+    (idx.year > -1 ? selected[idx.year] : undefined) ??
+    min.getFullYear().toString()
+  const mStr = (idx.month > -1 ? selected[idx.month] : undefined) ?? '1'
+  const dStr = (idx.day > -1 ? selected[idx.day] : undefined) ?? '1'
 
   const selectedYear = parseInt(yStr)
   const firstDayInSelectedMonth = dayjs(
@@ -166,14 +177,8 @@ export function generateDatePickerColumns(
       value: v.toString(),
     }))
   }
-  // push date columns according to fields order
-  const fieldsOrder: ('year' | 'month' | 'day')[] = (() => {
-    if (!fields) return ['year', 'month', 'day']
-    if (Array.isArray(fields)) return fields
-    if (fields === 'MDY') return ['month', 'day', 'year']
-    if (fields === 'DMY') return ['day', 'month', 'year']
-    return ['year', 'month', 'day']
-  })()
+
+  const fieldsOrder: ('year' | 'month' | 'day')[] = parseFieldsOrder(fields)
   const available: Array<{
     key: 'year' | 'month' | 'day'
     col: PickerColumn | null

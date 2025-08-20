@@ -66,34 +66,24 @@ export const convertDateToStringArray = (
     const datePrecision = precision as DatePrecision
     const base = dateUtils.convertDateToStringArray(date)
     const length = precisionLengthRecord[datePrecision]
-    // Support reordering for Y/M/D only; time units (hour/minute/second) keep original order after day
+
+    const year = base[0]
+    const month = base[1]
+    const day = base[2]
     const order = normalizeDateFieldsOrder(fields)
-    if (length <= 3) {
-      const y = base[0]
-      const m = base[1]
-      const d = base[2]
-      const map: Record<'year' | 'month' | 'day', string> = {
-        year: y,
-        month: m,
-        day: d,
-      }
-      const reordered = order.map(k => map[k])
-      return reordered.slice(0, length)
+    const map: Record<'year' | 'month' | 'day', string> = {
+      year,
+      month,
+      day,
     }
-    // length > 3
-    const ymdReordered = (() => {
-      const y = base[0]
-      const m = base[1]
-      const d = base[2]
-      const map: Record<'year' | 'month' | 'day', string> = {
-        year: y,
-        month: m,
-        day: d,
-      }
-      return order.map(k => map[k])
-    })()
-    const rest = base.slice(3, length)
-    return [...ymdReordered, ...rest]
+    const ymdReordered = order.map(k => map[k])
+
+    if (length <= 3) {
+      return ymdReordered.slice(0, length)
+    } else {
+      const rest = base.slice(3, length)
+      return [...ymdReordered, ...rest]
+    }
   }
 }
 
@@ -125,16 +115,13 @@ export const convertStringArrayToDate = <
       includedSet.includes(k)
     )
     const mapped: (string | number | null | undefined)[] = []
-    // map Y/M/D by their position in presentOrder
-    const indexInPresent = (key: 'year' | 'month' | 'day') =>
-      presentOrder.indexOf(key)
-    const yIdx = indexInPresent('year')
-    const mIdx = indexInPresent('month')
-    const dIdx = indexInPresent('day')
+    const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
+    const yIdx = keyToIndexMap.get('year') ?? -1
+    const mIdx = keyToIndexMap.get('month') ?? -1
+    const dIdx = keyToIndexMap.get('day') ?? -1
     if (yIdx !== -1) mapped[0] = value[yIdx]
     if (mIdx !== -1) mapped[1] = value[mIdx]
     if (dIdx !== -1) mapped[2] = value[dIdx]
-    // append time units after Y/M/D
     for (let i = presentOrder.length; i < value.length; i += 1) {
       mapped[3 + (i - presentOrder.length)] = value[i]
     }
