@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react'
 import { Button, DatePicker, Space, Toast } from 'antd-mobile'
 import { DemoBlock } from 'demos'
+import React, { useCallback, useState } from 'react'
 import { weekdayToZh } from './weekdayToZh'
 
 const now = new Date()
@@ -270,6 +270,48 @@ function TillNowDemo() {
   )
 }
 
+// 选择列顺序配置
+function FieldsDemo() {
+  const [visible1, setVisible1] = useState(false)
+  const [visible2, setVisible2] = useState(false)
+  return (
+    <Space>
+      <Button
+        onClick={() => {
+          setVisible1(true)
+        }}
+      >
+        月-日-年
+      </Button>
+      <DatePicker
+        title='时间选择'
+        visible={visible1}
+        onClose={() => {
+          setVisible1(false)
+        }}
+        max={now}
+        onConfirm={val => {
+          Toast.show(val.toDateString())
+        }}
+        fields={['month', 'day', 'year']}
+      />
+      <Button onClick={() => setVisible2(true)}>日-月-年</Button>
+      <DatePicker
+        title='时间选择'
+        visible={visible2}
+        onClose={() => {
+          setVisible2(false)
+        }}
+        max={now}
+        onConfirm={val => {
+          Toast.show(val.toDateString())
+        }}
+        fields={'DMY'}
+      />
+    </Space>
+  )
+}
+
 export default () => {
   return (
     <>
@@ -299,6 +341,10 @@ export default () => {
 
       <DemoBlock title='至今'>
         <TillNowDemo />
+      </DemoBlock>
+
+      <DemoBlock title='选择列控制'>
+        <FieldsDemo />
       </DemoBlock>
     </>
   )

@@ -263,4 +263,77 @@ describe('DatePicker', () => {
     const dayEl = await screen.findByText('day-selected')
     expect(dayEl).toBeInTheDocument()
   })
+
+  describe('DatePicker fields prop', () => {
+    const defaultDate = new Date('2025-8-20')
+
+    const getColumnValues = (
+      baseElement: HTMLElement,
+      columnIndex: number
+    ): (string | null)[] => {
+      const columns = baseElement.querySelectorAll<HTMLElement>(
+        '.adm-picker-view-column'
+      )
+      return Array.from(
+        columns[columnIndex].querySelectorAll<HTMLElement>(
+          '.adm-picker-view-column-item'
+        )
+      ).map(el => el.textContent)
+    }
+
+    it('should render fields in correct order when using array format', async () => {
+      const onConfirm = jest.fn()
+      const { baseElement } = render(
+        <DatePicker
+          visible={true}
+          value={defaultDate}
+          fields={['month', 'day', 'year']}
+          onConfirm={onConfirm}
+        />
+      )
+
+      await waitFor(() => {
+        expect(getColumnValues(baseElement, 0)).toContain('8')
+        expect(getColumnValues(baseElement, 1)).toContain('20')
+        expect(
+          getColumnValues(baseElement, 2).some(v => v?.includes('2025'))
+        ).toBeTruthy()
+      })
+
+      fireEvent.click(screen.getByText('确定'))
+
+      await waitFor(() => {
+        expect(onConfirm.mock.calls[0][0].toDateString()).toEqual(
+          defaultDate.toDateString()
+        )
+      })
+    })
+
+    it('should render fields in correct order when using string format', async () => {
+      const onConfirm = jest.fn()
+      const { baseElement } = render(
+        <DatePicker
+          visible={true}
+          value={defaultDate}
+          fields='DMY'
+          onConfirm={onConfirm}
+        />
+      )
+
+      await waitFor(() => {
+        expect(getColumnValues(baseElement, 0)).toContain('20')
+        expect(getColumnValues(baseElement, 1)).toContain('8')
+        expect(
+          getColumnValues(baseElement, 2).some(v => v?.includes('2025'))
+        ).toBeTruthy()
+      })
+      fireEvent.click(screen.getByText('确定'))
+
+      await waitFor(() => {
+        expect(onConfirm.mock.calls[0][0].toDateString()).toEqual(
+          defaultDate.toDateString()
+        )
+      })
+    })
+  })
 })
