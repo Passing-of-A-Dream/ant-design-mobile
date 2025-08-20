@@ -90,7 +90,7 @@ export const convertStringArrayToDate = <
   columns?: DateColumnsOrder
 ) => {
   // Special case for DATE_NOW
-  if (value?.[0] === TILL_NOW) {
+  if (value.some(v => v === TILL_NOW)) {
     const now: PickerDate = new Date()
     now.tillNow = true
     return now
