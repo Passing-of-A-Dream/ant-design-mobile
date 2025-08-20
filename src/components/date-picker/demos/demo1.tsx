@@ -270,7 +270,7 @@ function TillNowDemo() {
   )
 }
 
-// 选择列顺序配置
+// 自定义列顺序
 function FieldsDemo() {
   const [visible1, setVisible1] = useState(false)
   const [visible2, setVisible2] = useState(false)
@@ -343,7 +343,7 @@ export default () => {
         <TillNowDemo />
       </DemoBlock>
 
-      <DemoBlock title='选择列控制'>
+      <DemoBlock title='自定义列顺序'>
         <FieldsDemo />
       </DemoBlock>
     </>
