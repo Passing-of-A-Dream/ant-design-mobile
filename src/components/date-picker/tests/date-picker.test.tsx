@@ -287,7 +287,7 @@ describe('DatePicker', () => {
         <DatePicker
           visible={true}
           value={defaultDate}
-          fields={['month', 'day', 'year']}
+          columns={['month', 'day', 'year']}
           onConfirm={onConfirm}
         />
       )
@@ -300,33 +300,6 @@ describe('DatePicker', () => {
         ).toBeTruthy()
       })
 
-      fireEvent.click(screen.getByText('确定'))
-
-      await waitFor(() => {
-        expect(onConfirm.mock.calls[0][0].toDateString()).toEqual(
-          defaultDate.toDateString()
-        )
-      })
-    })
-
-    it('should render fields in correct order when using string format', async () => {
-      const onConfirm = jest.fn()
-      const { baseElement } = render(
-        <DatePicker
-          visible={true}
-          value={defaultDate}
-          fields='DMY'
-          onConfirm={onConfirm}
-        />
-      )
-
-      await waitFor(() => {
-        expect(getColumnValues(baseElement, 0)).toContain('20')
-        expect(getColumnValues(baseElement, 1)).toContain('8')
-        expect(
-          getColumnValues(baseElement, 2).some(v => v?.includes('2025'))
-        ).toBeTruthy()
-      })
       fireEvent.click(screen.getByText('确定'))
 
       await waitFor(() => {

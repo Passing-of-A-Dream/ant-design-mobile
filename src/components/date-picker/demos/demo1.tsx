@@ -5,6 +5,8 @@ import { weekdayToZh } from './weekdayToZh'
 
 const now = new Date()
 
+const { YEAR_COLUMN, MONTH_COLUMN, DAY_COLUMN } = DatePicker
+
 // 基础用法
 function BasicDemo() {
   const [visible, setVisible] = useState(false)
@@ -293,9 +295,9 @@ function FieldsDemo() {
         onConfirm={val => {
           Toast.show(val.toDateString())
         }}
-        fields={['month', 'day', 'year']}
+        columns={[MONTH_COLUMN, DAY_COLUMN, YEAR_COLUMN]}
       />
-      <Button onClick={() => setVisible2(true)}>日-月-年</Button>
+      <Button onClick={() => setVisible2(true)}>日-月</Button>
       <DatePicker
         title='时间选择'
         visible={visible2}
@@ -306,7 +308,7 @@ function FieldsDemo() {
         onConfirm={val => {
           Toast.show(val.toDateString())
         }}
-        fields={'DMY'}
+        columns={[DAY_COLUMN, MONTH_COLUMN]}
       />
     </Space>
   )

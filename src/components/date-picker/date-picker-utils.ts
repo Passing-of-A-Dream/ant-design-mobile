@@ -6,7 +6,7 @@ import * as quarterUtils from './date-picker-quarter-utils'
 import type { WeekPrecision } from './date-picker-week-utils'
 import * as weekUtils from './date-picker-week-utils'
 import type { PickerDate } from './util'
-import { TILL_NOW } from './util'
+import { DAY_COLUMN, MONTH_COLUMN, TILL_NOW, YEAR_COLUMN } from './util'
 
 export type Precision = DatePrecision | WeekPrecision | QuarterPrecision
 
@@ -22,26 +22,21 @@ export type DatePickerFilter = Partial<
   >
 >
 
-export type DateFieldsOrder =
-  | ('year' | 'month' | 'day')[]
-  | 'YMD'
-  | 'MDY'
-  | 'DMY'
+export type DateColumnsOrder = ('year' | 'month' | 'day')[]
 
-export function normalizeDateFieldsOrder(
-  fields: DateFieldsOrder | undefined
-): ('year' | 'month' | 'day')[] {
-  if (!fields) return ['year', 'month', 'day']
-  if (Array.isArray(fields)) return fields
-  switch (fields) {
-    case 'MDY':
-      return ['month', 'day', 'year']
-    case 'DMY':
-      return ['day', 'month', 'year']
-    case 'YMD':
-    default:
-      return ['year', 'month', 'day']
+export function normalizeDateColumnsOrder(
+  columns: DateColumnsOrder | undefined
+): DateColumnsOrder {
+  if (!columns || columns.length === 0) {
+    return [YEAR_COLUMN, MONTH_COLUMN, DAY_COLUMN]
   }
+  if (!Array.isArray(columns))
+    throw new Error('DateColumnsOrder must be an array')
+  const uniqueColumns = new Set(columns)
+  if (uniqueColumns.size !== columns.length) {
+    throw new Error('DateColumnsOrder contains duplicate values')
+  }
+  return columns
 }
 
 const precisionLengthRecord: Record<DatePrecision, number> = {
@@ -56,7 +51,7 @@ const precisionLengthRecord: Record<DatePrecision, number> = {
 export const convertDateToStringArray = (
   date: Date | undefined | null,
   precision: Precision,
-  fields?: DateFieldsOrder
+  columns?: DateColumnsOrder
 ) => {
   if (precision.includes('week')) {
     return weekUtils.convertDateToStringArray(date)
@@ -70,7 +65,7 @@ export const convertDateToStringArray = (
     const year = base[0]
     const month = base[1]
     const day = base[2]
-    const order = normalizeDateFieldsOrder(fields)
+    const order = normalizeDateColumnsOrder(columns)
     const map: Record<'year' | 'month' | 'day', string> = {
       year,
       month,
@@ -92,7 +87,7 @@ export const convertStringArrayToDate = <
 >(
   value: T[],
   precision: Precision,
-  fields?: DateFieldsOrder
+  columns?: DateColumnsOrder
 ) => {
   // Special case for DATE_NOW
   if (value?.[0] === TILL_NOW) {
@@ -111,17 +106,24 @@ export const convertStringArrayToDate = <
     const includedSet = (
       ['year', 'month', 'day'] as Array<'year' | 'month' | 'day'>
     ).slice(0, includedCount)
-    const presentOrder = normalizeDateFieldsOrder(fields).filter(k =>
+    const presentOrder = normalizeDateColumnsOrder(columns).filter(k =>
       includedSet.includes(k)
     )
     const mapped: (string | number | null | undefined)[] = []
     const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
+
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11
+    const currentDay = now.getDate()
+
     const yIdx = keyToIndexMap.get('year') ?? -1
     const mIdx = keyToIndexMap.get('month') ?? -1
     const dIdx = keyToIndexMap.get('day') ?? -1
-    if (yIdx !== -1) mapped[0] = value[yIdx]
-    if (mIdx !== -1) mapped[1] = value[mIdx]
-    if (dIdx !== -1) mapped[2] = value[dIdx]
+
+    mapped[0] = yIdx !== -1 ? value[yIdx] : currentYear
+    mapped[1] = mIdx !== -1 ? value[mIdx] : currentMonth
+    mapped[2] = dIdx !== -1 ? value[dIdx] : currentDay
     for (let i = presentOrder.length; i < value.length; i += 1) {
       mapped[3 + (i - presentOrder.length)] = value[i]
     }
@@ -137,7 +139,7 @@ export const generateDatePickerColumns = (
   renderLabel: RenderLabel,
   filter: DatePickerFilter | undefined,
   tillNow?: boolean,
-  fields?: DateFieldsOrder
+  columns?: DateColumnsOrder
 ) => {
   if (precision.startsWith('week')) {
     return weekUtils.generateDatePickerColumns(
@@ -166,7 +168,7 @@ export const generateDatePickerColumns = (
       renderLabel,
       filter,
       tillNow,
-      fields
+      columns
     )
   }
 }

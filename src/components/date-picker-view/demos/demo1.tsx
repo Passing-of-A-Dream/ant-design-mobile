@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
 import { DatePickerView } from 'antd-mobile'
 import { DemoBlock } from 'demos'
+import React, { useState } from 'react'
 
-import { weekdayToZh } from './weekdayToZh'
 import { DatePickerFilter } from '../../date-picker'
+import { weekdayToZh } from './weekdayToZh'
 
 const now = new Date()
 

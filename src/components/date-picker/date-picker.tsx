@@ -16,7 +16,7 @@ import type {
 } from '../picker'
 import Picker from '../picker'
 import type {
-  DateFieldsOrder,
+  DateColumnsOrder,
   DatePickerFilter,
   Precision,
 } from './date-picker-utils'
@@ -62,7 +62,7 @@ export type DatePickerProps = Pick<
   renderLabel?: RenderLabel
   filter?: DatePickerFilter
   tillNow?: boolean
-  fields?: DateFieldsOrder
+  columns?: DateColumnsOrder
 } & NativeProps
 
 const thisYear = new Date().getFullYear()
@@ -72,7 +72,7 @@ const defaultProps = {
   max: new Date(new Date().setFullYear(thisYear + 10)),
   precision: 'day',
   defaultValue: null as PickerDate | null,
-  fields: 'YMD',
+  columns: ['year', 'month', 'day'] as DateColumnsOrder,
 }
 
 export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
@@ -103,7 +103,7 @@ export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
       date = new Date(
         bound(date.getTime(), props.min.getTime(), props.max.getTime())
       )
-      return convertDateToStringArray(date, props.precision, props.fields)
+      return convertDateToStringArray(date, props.precision, props.columns)
     }, [value, props.precision, props.min, props.max])
 
     const onConfirm = useCallback(
@@ -111,15 +111,15 @@ export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
         const date = convertStringArrayToDate(
           val,
           props.precision,
-          props.fields
+          props.columns
         )
         setValue(date, true)
       },
-      [setValue, props.precision, props.fields]
+      [setValue, props.precision, props.columns]
     )
 
     const onSelect = useMemoizedFn((val: PickerValue[]) => {
-      const date = convertStringArrayToDate(val, props.precision, props.fields)
+      const date = convertStringArrayToDate(val, props.precision, props.columns)
       props.onSelect?.(date)
     })
 
@@ -133,7 +133,7 @@ export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
           mergedRenderLabel,
           props.filter,
           props.tillNow,
-          props.fields
+          props.columns
         ),
       [
         props.min,
@@ -141,7 +141,7 @@ export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(
         props.precision,
         mergedRenderLabel,
         props.tillNow,
-        props.fields,
+        props.columns,
       ]
     )
 

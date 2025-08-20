@@ -4,8 +4,12 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 import isoWeeksInYear from 'dayjs/plugin/isoWeeksInYear'
 import { RenderLabel } from '../date-picker-view/date-picker-view'
 import { PickerColumn } from '../picker'
-import type { DateFieldsOrder, DatePickerFilter } from './date-picker-utils'
-import { TILL_NOW } from './util'
+import {
+  normalizeDateColumnsOrder,
+  type DateColumnsOrder,
+  type DatePickerFilter,
+} from './date-picker-utils'
+import { DAY_COLUMN, MONTH_COLUMN, TILL_NOW, YEAR_COLUMN } from './util'
 
 dayjs.extend(isoWeek)
 dayjs.extend(isoWeeksInYear)
@@ -28,23 +32,6 @@ const precisionRankRecord: Record<DatePrecision, number> = {
   second: 5,
 }
 
-const parseFieldsOrder = (
-  fields?: Array<'year' | 'month' | 'day'> | string
-): ('year' | 'month' | 'day')[] => {
-  const DEFAULT_ORDER: ('year' | 'month' | 'day')[] = ['year', 'month', 'day']
-
-  if (!fields) return DEFAULT_ORDER
-  if (Array.isArray(fields)) return fields
-
-  const STRING_FORMAT_MAP: Record<string, ('year' | 'month' | 'day')[]> = {
-    'MDY': ['month', 'day', 'year'],
-    'DMY': ['day', 'month', 'year'],
-    'YMD': ['year', 'month', 'day'],
-  }
-
-  return STRING_FORMAT_MAP[fields] || DEFAULT_ORDER
-}
-
 export function generateDatePickerColumns(
   selected: string[],
   min: Date,
@@ -53,7 +40,7 @@ export function generateDatePickerColumns(
   renderLabel: RenderLabel,
   filter: DatePickerFilter | undefined,
   tillNow?: boolean,
-  fields?: DateFieldsOrder
+  columns?: DateColumnsOrder
 ) {
   const ret: PickerColumn[] = []
 
@@ -73,17 +60,22 @@ export function generateDatePickerColumns(
 
   const rank = precisionRankRecord[precision]
 
-  const order: ('year' | 'month' | 'day')[] = parseFieldsOrder(fields)
+  const order: DateColumnsOrder = normalizeDateColumnsOrder(columns)
   const idx = {
-    year: order.indexOf('year'),
-    month: order.indexOf('month'),
-    day: order.indexOf('day'),
+    year: order.indexOf(YEAR_COLUMN),
+    month: order.indexOf(MONTH_COLUMN),
+    day: order.indexOf(DAY_COLUMN),
   }
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+  const currentDay = now.getDate()
   const yStr =
-    (idx.year > -1 ? selected[idx.year] : undefined) ??
-    min.getFullYear().toString()
-  const mStr = (idx.month > -1 ? selected[idx.month] : undefined) ?? '1'
-  const dStr = (idx.day > -1 ? selected[idx.day] : undefined) ?? '1'
+    idx.year > -1
+      ? selected[idx.year]
+      : Math.min(Math.max(currentYear, minYear), maxYear).toString()
+  const mStr = idx.month > -1 ? selected[idx.month] : currentMonth.toString()
+  const dStr = idx.day > -1 ? selected[idx.day] : currentDay.toString()
 
   const selectedYear = parseInt(yStr)
   const firstDayInSelectedMonth = dayjs(
@@ -178,7 +170,7 @@ export function generateDatePickerColumns(
     }))
   }
 
-  const fieldsOrder: ('year' | 'month' | 'day')[] = parseFieldsOrder(fields)
+  const columnsOrder = normalizeDateColumnsOrder(columns)
   const available: Array<{
     key: 'year' | 'month' | 'day'
     col: PickerColumn | null
@@ -187,7 +179,7 @@ export function generateDatePickerColumns(
     { key: 'month', col: monthCol },
     { key: 'day', col: dayCol },
   ]
-  for (const key of fieldsOrder) {
+  for (const key of columnsOrder) {
     const found = available.find(a => a.key === key)
     if (found?.col) ret.push(found.col)
   }
