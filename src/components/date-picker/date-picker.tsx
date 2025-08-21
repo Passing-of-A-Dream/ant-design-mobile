@@ -72,7 +72,6 @@ const defaultProps = {
   max: new Date(new Date().setFullYear(thisYear + 10)),
   precision: 'day',
   defaultValue: null as PickerDate | null,
-  columns: ['year', 'month', 'day'] as DateColumnsOrder,
 }
 
 export const DatePicker = forwardRef<DatePickerRef, DatePickerProps>(

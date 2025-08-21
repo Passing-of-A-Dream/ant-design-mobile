@@ -37,7 +37,14 @@ export function normalizeDateColumnsOrder(
   columns: DateColumnsOrder | undefined
 ): DateColumnsOrder {
   if (!columns || columns.length === 0) {
-    return [YEAR_COLUMN, MONTH_COLUMN, DAY_COLUMN]
+    return [
+      YEAR_COLUMN,
+      MONTH_COLUMN,
+      DAY_COLUMN,
+      HOUR_COLUMN,
+      MINUTE_COLUMN,
+      SECOND_COLUMN,
+    ]
   }
   if (!Array.isArray(columns))
     throw new Error('DateColumnsOrder must be an array')
