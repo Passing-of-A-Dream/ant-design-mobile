@@ -9,7 +9,16 @@ import {
   type DateColumnsOrder,
   type DatePickerFilter,
 } from './date-picker-utils'
-import { DAY_COLUMN, MONTH_COLUMN, TILL_NOW, YEAR_COLUMN } from './util'
+import {
+  DAY_COLUMN,
+  HOUR_COLUMN,
+  MINUTE_COLUMN,
+  MONTH_COLUMN,
+  SECOND_COLUMN,
+  TILL_NOW,
+  YEAR_COLUMN,
+  type DateColumns,
+} from './util'
 
 dayjs.extend(isoWeek)
 dayjs.extend(isoWeeksInYear)
@@ -61,21 +70,30 @@ export function generateDatePickerColumns(
   const rank = precisionRankRecord[precision]
 
   const order: DateColumnsOrder = normalizeDateColumnsOrder(columns)
-  const idx = {
-    year: order.indexOf(YEAR_COLUMN),
-    month: order.indexOf(MONTH_COLUMN),
-    day: order.indexOf(DAY_COLUMN),
-  }
+  const presentOrder = order.filter(
+    k => precisionRankRecord[k as DatePrecision] <= rank
+  )
+  const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1
   const currentDay = now.getDate()
+  const safeGet = (key: DateColumns): string | undefined => {
+    const i = keyToIndexMap.get(key)
+    if (i === undefined || i < 0) return undefined
+    const v = selected?.[i]
+    if (v === TILL_NOW || v === undefined || v === null) return undefined
+    return v
+  }
+
   const yStr =
-    idx.year > -1
-      ? selected[idx.year]
-      : Math.min(Math.max(currentYear, minYear), maxYear).toString()
-  const mStr = idx.month > -1 ? selected[idx.month] : currentMonth.toString()
-  const dStr = idx.day > -1 ? selected[idx.day] : currentDay.toString()
+    safeGet(YEAR_COLUMN) ??
+    Math.min(Math.max(currentYear, minYear), maxYear).toString()
+  const mStr = safeGet(MONTH_COLUMN) ?? currentMonth.toString()
+  const dStr = safeGet(DAY_COLUMN) ?? currentDay.toString()
+  const hourStr = safeGet(HOUR_COLUMN) ?? '0'
+  const minuteStr = safeGet(MINUTE_COLUMN) ?? '0'
+  const secondStr = safeGet(SECOND_COLUMN) ?? '0'
 
   const selectedYear = parseInt(yStr)
   const firstDayInSelectedMonth = dayjs(
@@ -83,9 +101,10 @@ export function generateDatePickerColumns(
   )
   const selectedMonth = parseInt(mStr)
   const selectedDay = parseInt(dStr)
-  const selectedHour = parseInt(selected[3])
-  const selectedMinute = parseInt(selected[4])
-  const selectedSecond = parseInt(selected[5])
+
+  const selectedHour = parseInt(hourStr)
+  const selectedMinute = parseInt(minuteStr)
+  const selectedSecond = parseInt(secondStr)
 
   const isInMinYear = selectedYear === minYear
   const isInMaxYear = selectedYear === maxYear
@@ -119,9 +138,9 @@ export function generateDatePickerColumns(
         case 'hour':
           return [yStr, mStr, dStr, v]
         case 'minute':
-          return [yStr, mStr, dStr, selected[3] ?? '0', v]
+          return [yStr, mStr, dStr, hourStr, v]
         case 'second':
-          return [yStr, mStr, dStr, selected[3] ?? '0', selected[4] ?? '0', v]
+          return [yStr, mStr, dStr, hourStr, minuteStr, v]
       }
     }
     const currentFilter = filter?.[precision]
@@ -170,51 +189,47 @@ export function generateDatePickerColumns(
     }))
   }
 
-  const columnsOrder = normalizeDateColumnsOrder(columns)
-  const available: Array<{
-    key: 'year' | 'month' | 'day'
-    col: PickerColumn | null
-  }> = [
-    { key: 'year', col: yearCol },
-    { key: 'month', col: monthCol },
-    { key: 'day', col: dayCol },
-  ]
-  for (const key of columnsOrder) {
-    const found = available.find(a => a.key === key)
-    if (found?.col) ret.push(found.col)
-  }
+  const columnsMap: Partial<Record<DateColumns, PickerColumn>> = {}
+  if (yearCol) columnsMap[YEAR_COLUMN] = yearCol
+  if (monthCol) columnsMap[MONTH_COLUMN] = monthCol
+  if (dayCol) columnsMap[DAY_COLUMN] = dayCol
+
   if (rank >= precisionRankRecord.hour) {
     const lower = isInMinDay ? minHour : 0
     const upper = isInMaxDay ? maxHour : 23
     const hours = generateColumn(lower, upper, 'hour')
-    ret.push(
-      hours.map(v => ({
-        label: renderLabel('hour', v, { selected: selectedHour === v }),
-        value: v.toString(),
-      }))
-    )
+    columnsMap[HOUR_COLUMN] = hours.map(v => ({
+      label: renderLabel('hour', v, { selected: selectedHour === v }),
+      value: v.toString(),
+    }))
   }
   if (rank >= precisionRankRecord.minute) {
     const lower = isInMinHour ? minMinute : 0
     const upper = isInMaxHour ? maxMinute : 59
     const minutes = generateColumn(lower, upper, 'minute')
-    ret.push(
-      minutes.map(v => ({
-        label: renderLabel('minute', v, { selected: selectedMinute === v }),
-        value: v.toString(),
-      }))
-    )
+    columnsMap[MINUTE_COLUMN] = minutes.map(v => ({
+      label: renderLabel('minute', v, { selected: selectedMinute === v }),
+      value: v.toString(),
+    }))
   }
   if (rank >= precisionRankRecord.second) {
     const lower = isInMinMinute ? minSecond : 0
     const upper = isInMaxMinute ? maxSecond : 59
     const seconds = generateColumn(lower, upper, 'second')
-    ret.push(
-      seconds.map(v => ({
-        label: renderLabel('second', v, { selected: selectedSecond === v }),
-        value: v.toString(),
-      }))
-    )
+    columnsMap[SECOND_COLUMN] = seconds.map(v => ({
+      label: renderLabel('second', v, { selected: selectedSecond === v }),
+      value: v.toString(),
+    }))
+  }
+
+  const columnsOrder = normalizeDateColumnsOrder(columns)
+  const neededKeysInOrder = columnsOrder.filter(
+    k => precisionRankRecord[k as DatePrecision] <= rank
+  )
+
+  for (const key of neededKeysInOrder) {
+    const col = columnsMap[key]
+    if (col) ret.push(col)
   }
 
   // Till Now

@@ -2,7 +2,15 @@ import { attachPropertiesToComponent } from '../../utils/attach-properties-to-co
 import { DatePicker } from './date-picker'
 import './date-picker.less'
 import { prompt } from './prompt'
-import { DAY_COLUMN, MONTH_COLUMN, TILL_NOW, YEAR_COLUMN } from './util'
+import {
+  DAY_COLUMN,
+  HOUR_COLUMN,
+  MINUTE_COLUMN,
+  MONTH_COLUMN,
+  SECOND_COLUMN,
+  TILL_NOW,
+  YEAR_COLUMN,
+} from './util'
 
 export type { DatePickerProps, DatePickerRef } from './date-picker'
 export type { DatePickerFilter } from './date-picker-utils'
@@ -13,4 +21,7 @@ export default attachPropertiesToComponent(DatePicker, {
   YEAR_COLUMN,
   MONTH_COLUMN,
   DAY_COLUMN,
+  HOUR_COLUMN,
+  MINUTE_COLUMN,
+  SECOND_COLUMN,
 })

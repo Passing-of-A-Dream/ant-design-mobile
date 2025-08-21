@@ -5,7 +5,14 @@ import { weekdayToZh } from './weekdayToZh'
 
 const now = new Date()
 
-const { YEAR_COLUMN, MONTH_COLUMN, DAY_COLUMN } = DatePicker
+const {
+  YEAR_COLUMN,
+  MONTH_COLUMN,
+  DAY_COLUMN,
+  HOUR_COLUMN,
+  MINUTE_COLUMN,
+  SECOND_COLUMN,
+} = DatePicker
 
 // 基础用法
 function BasicDemo() {
@@ -297,7 +304,7 @@ function FieldsDemo() {
         }}
         columns={[MONTH_COLUMN, DAY_COLUMN, YEAR_COLUMN]}
       />
-      <Button onClick={() => setVisible2(true)}>日-月</Button>
+      <Button onClick={() => setVisible2(true)}>时-分-秒-月-日-年</Button>
       <DatePicker
         title='时间选择'
         visible={visible2}
@@ -305,10 +312,18 @@ function FieldsDemo() {
           setVisible2(false)
         }}
         max={now}
+        precision='second'
         onConfirm={val => {
-          Toast.show(val.toDateString())
+          Toast.show(val.toString())
         }}
-        columns={[DAY_COLUMN, MONTH_COLUMN]}
+        columns={[
+          HOUR_COLUMN,
+          MINUTE_COLUMN,
+          SECOND_COLUMN,
+          MONTH_COLUMN,
+          DAY_COLUMN,
+          YEAR_COLUMN,
+        ]}
       />
     </Space>
   )

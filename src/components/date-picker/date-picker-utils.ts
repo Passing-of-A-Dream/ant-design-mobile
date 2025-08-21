@@ -6,7 +6,16 @@ import * as quarterUtils from './date-picker-quarter-utils'
 import type { WeekPrecision } from './date-picker-week-utils'
 import * as weekUtils from './date-picker-week-utils'
 import type { PickerDate } from './util'
-import { DAY_COLUMN, MONTH_COLUMN, TILL_NOW, YEAR_COLUMN } from './util'
+import {
+  DateColumns,
+  DAY_COLUMN,
+  HOUR_COLUMN,
+  MINUTE_COLUMN,
+  MONTH_COLUMN,
+  SECOND_COLUMN,
+  TILL_NOW,
+  YEAR_COLUMN,
+} from './util'
 
 export type Precision = DatePrecision | WeekPrecision | QuarterPrecision
 
@@ -22,7 +31,7 @@ export type DatePickerFilter = Partial<
   >
 >
 
-export type DateColumnsOrder = ('year' | 'month' | 'day')[]
+export type DateColumnsOrder = DateColumns[]
 
 export function normalizeDateColumnsOrder(
   columns: DateColumnsOrder | undefined
@@ -62,23 +71,29 @@ export const convertDateToStringArray = (
     const base = dateUtils.convertDateToStringArray(date)
     const length = precisionLengthRecord[datePrecision]
 
-    const year = base[0]
-    const month = base[1]
-    const day = base[2]
-    const order = normalizeDateColumnsOrder(columns)
-    const map: Record<'year' | 'month' | 'day', string> = {
-      year,
-      month,
-      day,
+    const map: Record<DateColumns, string> = {
+      year: base[0],
+      month: base[1],
+      day: base[2],
+      hour: base[3],
+      minute: base[4],
+      second: base[5],
     }
-    const ymdReordered = order.map(k => map[k])
 
-    if (length <= 3) {
-      return ymdReordered.slice(0, length)
-    } else {
-      const rest = base.slice(3, length)
-      return [...ymdReordered, ...rest]
-    }
+    const allKeys: DateColumns[] = [
+      YEAR_COLUMN,
+      MONTH_COLUMN,
+      DAY_COLUMN,
+      HOUR_COLUMN,
+      MINUTE_COLUMN,
+      SECOND_COLUMN,
+    ]
+    const providedOrder = normalizeDateColumnsOrder(columns)
+    const limitedOrder = providedOrder.filter(
+      k => allKeys.indexOf(k) <= length - 1
+    )
+
+    return limitedOrder.map(k => map[k])
   }
 }
 
@@ -102,31 +117,38 @@ export const convertStringArrayToDate = <
     return quarterUtils.convertStringArrayToDate(value)
   } else {
     const datePrecision = precision as DatePrecision
-    const includedCount = Math.min(precisionLengthRecord[datePrecision], 3)
-    const includedSet = (
-      ['year', 'month', 'day'] as Array<'year' | 'month' | 'day'>
-    ).slice(0, includedCount)
-    const presentOrder = normalizeDateColumnsOrder(columns).filter(k =>
-      includedSet.includes(k)
-    )
-    const mapped: (string | number | null | undefined)[] = []
+    const length = precisionLengthRecord[datePrecision]
+
+    const providedOrder = normalizeDateColumnsOrder(columns)
+    const presentOrder = providedOrder.slice(0, length)
+
     const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
 
     const now = new Date()
     const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11
+    const currentMonth = now.getMonth() + 1
     const currentDay = now.getDate()
 
-    const yIdx = keyToIndexMap.get('year') ?? -1
-    const mIdx = keyToIndexMap.get('month') ?? -1
-    const dIdx = keyToIndexMap.get('day') ?? -1
+    const mapped: (string | number | null | undefined)[] = []
+    mapped[0] = keyToIndexMap.has(YEAR_COLUMN)
+      ? value[keyToIndexMap.get(YEAR_COLUMN) as number]
+      : currentYear
+    mapped[1] = keyToIndexMap.has(MONTH_COLUMN)
+      ? value[keyToIndexMap.get(MONTH_COLUMN) as number]
+      : currentMonth
+    mapped[2] = keyToIndexMap.has(DAY_COLUMN)
+      ? value[keyToIndexMap.get(DAY_COLUMN) as number]
+      : currentDay
+    mapped[3] = keyToIndexMap.has(HOUR_COLUMN)
+      ? value[keyToIndexMap.get(HOUR_COLUMN) as number]
+      : '0'
+    mapped[4] = keyToIndexMap.has(MINUTE_COLUMN)
+      ? value[keyToIndexMap.get(MINUTE_COLUMN) as number]
+      : '0'
+    mapped[5] = keyToIndexMap.has(SECOND_COLUMN)
+      ? value[keyToIndexMap.get(SECOND_COLUMN) as number]
+      : '0'
 
-    mapped[0] = yIdx !== -1 ? value[yIdx] : currentYear
-    mapped[1] = mIdx !== -1 ? value[mIdx] : currentMonth
-    mapped[2] = dIdx !== -1 ? value[dIdx] : currentDay
-    for (let i = presentOrder.length; i < value.length; i += 1) {
-      mapped[3 + (i - presentOrder.length)] = value[i]
-    }
     return dateUtils.convertStringArrayToDate(mapped as string[])
   }
 }
