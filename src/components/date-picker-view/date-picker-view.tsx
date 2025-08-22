@@ -4,7 +4,6 @@ import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProps } from '../../utils/with-default-props'
 import type {
-  DateColumnsOrder,
   DatePickerFilter,
   Precision,
 } from '../date-picker/date-picker-utils'
@@ -13,7 +12,7 @@ import {
   convertStringArrayToDate,
   generateDatePickerColumns,
 } from '../date-picker/date-picker-utils'
-import type { PickerDate } from '../date-picker/util'
+import type { DateColumnsOrder, PickerDate } from '../date-picker/util'
 import { TILL_NOW } from '../date-picker/util'
 import type { PickerValue, PickerViewProps } from '../picker-view'
 import PickerView from '../picker-view'
