@@ -5,13 +5,14 @@ import type { QuarterPrecision } from './date-picker-quarter-utils'
 import * as quarterUtils from './date-picker-quarter-utils'
 import type { WeekPrecision } from './date-picker-week-utils'
 import * as weekUtils from './date-picker-week-utils'
-import type { PickerDate } from './util'
+import type { DateColumnsOrder, PickerDate } from './util'
 import {
   DateColumns,
   DAY_COLUMN,
   HOUR_COLUMN,
   MINUTE_COLUMN,
   MONTH_COLUMN,
+  normalizeDateColumnsOrder,
   SECOND_COLUMN,
   TILL_NOW,
   YEAR_COLUMN,
@@ -30,30 +31,6 @@ export type DatePickerFilter = Partial<
     ) => boolean
   >
 >
-
-export type DateColumnsOrder = DateColumns[]
-
-export function normalizeDateColumnsOrder(
-  columns: DateColumnsOrder | undefined
-): DateColumnsOrder {
-  if (!columns || columns.length === 0) {
-    return [
-      YEAR_COLUMN,
-      MONTH_COLUMN,
-      DAY_COLUMN,
-      HOUR_COLUMN,
-      MINUTE_COLUMN,
-      SECOND_COLUMN,
-    ]
-  }
-  if (!Array.isArray(columns))
-    throw new Error('DateColumnsOrder must be an array')
-  const uniqueColumns = new Set(columns)
-  if (uniqueColumns.size !== columns.length) {
-    throw new Error('DateColumnsOrder contains duplicate values')
-  }
-  return columns
-}
 
 const precisionLengthRecord: Record<DatePrecision, number> = {
   year: 1,
@@ -127,7 +104,17 @@ export const convertStringArrayToDate = <
     const length = precisionLengthRecord[datePrecision]
 
     const providedOrder = normalizeDateColumnsOrder(columns)
-    const presentOrder = providedOrder.slice(0, length)
+    const allKeys: DateColumns[] = [
+      YEAR_COLUMN,
+      MONTH_COLUMN,
+      DAY_COLUMN,
+      HOUR_COLUMN,
+      MINUTE_COLUMN,
+      SECOND_COLUMN,
+    ]
+    const presentOrder = providedOrder.filter(
+      k => allKeys.indexOf(k) <= length - 1
+    )
 
     const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
 

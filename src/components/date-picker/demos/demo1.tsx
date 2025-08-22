@@ -312,7 +312,6 @@ function FieldsDemo() {
           setVisible2(false)
         }}
         max={now}
-        precision='second'
         onConfirm={val => {
           Toast.show(val.toString())
         }}

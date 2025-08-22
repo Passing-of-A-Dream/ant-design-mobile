@@ -17,6 +17,14 @@ import { convertStringArrayToDate } from '../date-picker-week-utils'
 const classPrefix = `adm-picker`
 
 const now = new Date()
+const {
+  YEAR_COLUMN,
+  MONTH_COLUMN,
+  DAY_COLUMN,
+  HOUR_COLUMN,
+  MINUTE_COLUMN,
+  SECOND_COLUMN,
+} = DatePicker
 
 describe('DatePicker', () => {
   test('passes a11y test', async () => {
@@ -265,8 +273,6 @@ describe('DatePicker', () => {
   })
 
   describe('DatePicker fields prop', () => {
-    const defaultDate = new Date('2025-8-20')
-
     const getColumnValues = (
       baseElement: HTMLElement,
       columnIndex: number
@@ -282,6 +288,7 @@ describe('DatePicker', () => {
     }
 
     it('should render fields in correct order when using array format', async () => {
+      const defaultDate = new Date('2025-8-20')
       const onConfirm = jest.fn()
       const { baseElement } = render(
         <DatePicker
@@ -306,6 +313,56 @@ describe('DatePicker', () => {
         expect(onConfirm.mock.calls[0][0].toDateString()).toEqual(
           defaultDate.toDateString()
         )
+      })
+    })
+
+    it('should display columns in completely reversed order with precision="second"', async () => {
+      const defaultDate = new Date('2024-03-15 14:30:45')
+      const { baseElement } = render(
+        <DatePicker
+          visible={true}
+          value={defaultDate}
+          precision='second'
+          columns={[
+            SECOND_COLUMN,
+            MINUTE_COLUMN,
+            HOUR_COLUMN,
+            DAY_COLUMN,
+            MONTH_COLUMN,
+            YEAR_COLUMN,
+          ]}
+        />
+      )
+
+      await waitFor(() => {
+        expect(getColumnValues(baseElement, 0)).toContain('45')
+        expect(getColumnValues(baseElement, 1)).toContain('30')
+        expect(getColumnValues(baseElement, 2)).toContain('14')
+        expect(getColumnValues(baseElement, 3)).toContain('15')
+        expect(getColumnValues(baseElement, 4)).toContain('3')
+        expect(
+          getColumnValues(baseElement, 5).some(v => v?.includes('2024'))
+        ).toBeTruthy()
+      })
+    })
+
+    it('should display columns in reversed order with precision="day"', async () => {
+      const defaultDate = new Date('2024-03-15 14:30:45')
+      const { baseElement } = render(
+        <DatePicker
+          visible={true}
+          value={defaultDate}
+          precision='day'
+          columns={[DAY_COLUMN, MONTH_COLUMN, YEAR_COLUMN]}
+        />
+      )
+
+      await waitFor(() => {
+        expect(getColumnValues(baseElement, 0)).toContain('15')
+        expect(getColumnValues(baseElement, 1)).toContain('3')
+        expect(
+          getColumnValues(baseElement, 2).some(v => v?.includes('2024'))
+        ).toBeTruthy()
       })
     })
   })

@@ -15,17 +15,13 @@ import type {
   PickerValue,
 } from '../picker'
 import Picker from '../picker'
-import type {
-  DateColumnsOrder,
-  DatePickerFilter,
-  Precision,
-} from './date-picker-utils'
+import type { DatePickerFilter, Precision } from './date-picker-utils'
 import {
   convertDateToStringArray,
   convertStringArrayToDate,
   generateDatePickerColumns,
 } from './date-picker-utils'
-import type { PickerDate } from './util'
+import type { DateColumnsOrder, PickerDate } from './util'
 import { TILL_NOW } from './util'
 
 export type DatePickerRef = PickerRef

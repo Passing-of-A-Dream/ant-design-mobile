@@ -4,16 +4,14 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 import isoWeeksInYear from 'dayjs/plugin/isoWeeksInYear'
 import { RenderLabel } from '../date-picker-view/date-picker-view'
 import { PickerColumn } from '../picker'
+import { type DatePickerFilter } from './date-picker-utils'
 import {
-  normalizeDateColumnsOrder,
-  type DateColumnsOrder,
-  type DatePickerFilter,
-} from './date-picker-utils'
-import {
+  DateColumnsOrder,
   DAY_COLUMN,
   HOUR_COLUMN,
   MINUTE_COLUMN,
   MONTH_COLUMN,
+  normalizeDateColumnsOrder,
   SECOND_COLUMN,
   TILL_NOW,
   YEAR_COLUMN,
