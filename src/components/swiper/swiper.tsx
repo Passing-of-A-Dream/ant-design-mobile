@@ -5,7 +5,9 @@ import classNames from 'classnames'
 import toArray from 'rc-util/lib/Children/toArray'
 import type { CSSProperties, ReactElement, ReactNode } from 'react'
 import React, {
+  createContext,
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -21,6 +23,21 @@ import { mergeProps } from '../../utils/with-default-props'
 import { mergeFuncProps } from '../../utils/with-func-props'
 import PageIndicator, { PageIndicatorProps } from '../page-indicator'
 import { SwiperItem } from './swiper-item'
+
+// 嵌套 Swiper Context 定义
+type NestedSwiperDirection = 'horizontal' | 'vertical'
+
+interface NestedSwiperContextType {
+  // 通知父级 Swiper 子级已到达边界
+  notifyBoundaryReached: (
+    direction: NestedSwiperDirection,
+    swipeDirection: 'next' | 'prev'
+  ) => boolean
+  // 当前 Swiper 的方向
+  direction: NestedSwiperDirection
+}
+
+const NestedSwiperContext = createContext<NestedSwiperContextType | null>(null)
 
 const classPrefix = `adm-swiper`
 
@@ -57,6 +74,7 @@ export type SwiperProps = {
   stuckAtBoundary?: boolean
   rubberband?: boolean
   stopPropagation?: PropagationEvent[]
+  allowNestedSwipe?: boolean // 是否允许子级 Swiper 向当前 Swiper 传递边界事件
   /**
    * Virtual scroll usage. Should work with renderProps `children`
    */
@@ -79,6 +97,7 @@ const defaultProps = {
   stuckAtBoundary: true,
   rubberband: true,
   stopPropagation: [] as PropagationEvent[],
+  allowNestedSwipe: false,
 }
 
 let currentUid: undefined | {}
@@ -92,6 +111,12 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
     const [uid] = useState({})
     const timeoutRef = useRef<number | null>(null)
     const isVertical = direction === 'vertical'
+
+    // 嵌套 Swiper 逻辑
+    const parentContext = useContext(NestedSwiperContext)
+    const currentDirection: NestedSwiperDirection = isVertical
+      ? 'vertical'
+      : 'horizontal'
 
     const slideRatio = props.slideSize / 100
     const offsetRatio = props.trackOffset / 100
@@ -193,10 +218,13 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
         state => {
           dragCancelRef.current = state.cancel
           if (!state.intentional) return
+
+          // 正常的 currentUid 逻辑
           if (state.first && !currentUid) {
             currentUid = uid
           }
           if (currentUid !== uid) return
+
           currentUid = state.last ? undefined : uid
           const slidePixels = getSlidePixels()
           if (!slidePixels) return
@@ -213,10 +241,40 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
           } else {
             const minIndex = Math.floor(offset / slidePixels)
             const maxIndex = minIndex + 1
-            const index = Math.round(
+            const targetIndex = Math.round(
               (offset + velocity * 2000 * direction) / slidePixels
             )
-            swipeTo(bound(index, minIndex, maxIndex))
+            const boundedIndex = bound(targetIndex, minIndex, maxIndex)
+
+            // 检查是否会触发边界，如果是则尝试通知父级
+            const currentIndex = getCurrent()
+            let shouldNotifyParent = false
+            let swipeDirection: 'next' | 'prev' = 'next'
+
+            if (!loop) {
+              if (
+                targetIndex >= mergedTotal &&
+                currentIndex === mergedTotal - 1
+              ) {
+                shouldNotifyParent = true
+                swipeDirection = 'next'
+              } else if (targetIndex < 0 && currentIndex === 0) {
+                shouldNotifyParent = true
+                swipeDirection = 'prev'
+              }
+            }
+
+            if (shouldNotifyParent && handleBoundaryReached(swipeDirection)) {
+              // 父级处理了边界，先将子级位置归位到边界
+              const boundaryIndex =
+                swipeDirection === 'next' ? mergedTotal - 1 : 0
+              swipeTo(boundaryIndex)
+              setDragging(false)
+              return
+            }
+
+            // 正常滑动
+            swipeTo(boundedIndex)
             window.setTimeout(() => {
               setDragging(false)
             })
@@ -256,6 +314,17 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
         }
       )
 
+      // 处理边界通知的函数
+      function handleBoundaryReached(swipeDirection: 'next' | 'prev'): boolean {
+        if (!parentContext || parentContext.direction !== currentDirection) {
+          return false
+        }
+        return parentContext.notifyBoundaryReached(
+          currentDirection,
+          swipeDirection
+        )
+      }
+
       function swipeTo(index: number, immediate = false) {
         const roundedIndex = Math.round(index)
         const targetIndex = loop
@@ -275,11 +344,37 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
       }
 
       function swipeNext() {
-        swipeTo(Math.round(position.get() / 100) + 1)
+        const currentIndex = Math.round(position.get() / 100)
+        const nextIndex = currentIndex + 1
+
+        // 检查是否会超出右边界
+        if (!loop && nextIndex >= mergedTotal) {
+          // 先归位到最后一个位置
+          swipeTo(mergedTotal - 1)
+          // 然后尝试通知父级处理
+          if (handleBoundaryReached('next')) {
+            return // 父级处理了，不继续执行
+          }
+        }
+
+        swipeTo(nextIndex)
       }
 
       function swipePrev() {
-        swipeTo(Math.round(position.get() / 100) - 1)
+        const currentIndex = Math.round(position.get() / 100)
+        const prevIndex = currentIndex - 1
+
+        // 检查是否会超出左边界
+        if (!loop && prevIndex < 0) {
+          // 先归位到第一个位置
+          swipeTo(0)
+          // 然后尝试通知父级处理
+          if (handleBoundaryReached('prev')) {
+            return // 父级处理了，不继续执行
+          }
+        }
+
+        swipeTo(prevIndex)
       }
 
       useImperativeHandle(ref, () => ({
@@ -449,7 +544,37 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
         )
       }
 
-      return withNativeProps(
+      // 创建嵌套 Context 的值
+      const nestedContextValue: NestedSwiperContextType | null =
+        props.allowNestedSwipe
+          ? {
+              notifyBoundaryReached: (
+                direction: NestedSwiperDirection,
+                swipeDirection: 'next' | 'prev'
+              ) => {
+                // 只处理同方向的嵌套滑动
+                if (direction !== currentDirection) {
+                  return false
+                }
+
+                console.log(
+                  `接收到子级边界通知: ${direction} ${swipeDirection}`
+                )
+
+                // 执行对应的滑动
+                if (swipeDirection === 'next') {
+                  swipeNext()
+                } else {
+                  swipePrev()
+                }
+
+                return true // 表示已处理
+              },
+              direction: currentDirection,
+            }
+          : null
+
+      const swiperContent = withNativeProps(
         props,
         <div
           className={classNames(classPrefix, `${classPrefix}-${direction}`)}
@@ -473,6 +598,15 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
 
           {indicatorNode}
         </div>
+      )
+
+      // 如果允许嵌套滑动，则提供 Context
+      return nestedContextValue ? (
+        <NestedSwiperContext.Provider value={nestedContextValue}>
+          {swiperContent}
+        </NestedSwiperContext.Provider>
+      ) : (
+        swiperContent
       )
     }
   })

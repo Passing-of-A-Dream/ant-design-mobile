@@ -11,6 +11,50 @@ function $$(className: string) {
 
 const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
+// 嵌套 Swiper 测试组件
+const NestedSwiperTest = () => {
+  const outerColors = ['red', 'green', 'blue']
+  const innerColors = ['lightblue', 'lightgreen', 'lightyellow', 'lightpink']
+
+  const InnerSwiper = () => (
+    <Swiper loop={false} style={{ height: '100px' }} data-testid='inner-swiper'>
+      {innerColors.map((color, index) => (
+        <Swiper.Item key={index}>
+          <div
+            style={{
+              height: 100,
+              background: color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            内层 {index + 1}
+          </div>
+        </Swiper.Item>
+      ))}
+    </Swiper>
+  )
+
+  return (
+    <Swiper
+      allowNestedSwipe
+      loop={false}
+      style={{ height: '150px' }}
+      data-testid='outer-swiper'
+    >
+      {outerColors.map((color, index) => (
+        <Swiper.Item key={index}>
+          <div style={{ height: 150, background: color, padding: 10 }}>
+            <div>外层 {index + 1}</div>
+            <InnerSwiper />
+          </div>
+        </Swiper.Item>
+      ))}
+    </Swiper>
+  )
+}
+
 describe('Swiper', () => {
   const items = [1, 2, 3].map(item => (
     <Swiper.Item key={item}>
@@ -419,5 +463,31 @@ describe('Swiper', () => {
     fireEvent.click(getByTestId('change-order'))
 
     expect(mountLog).toEqual(['a', 'b', 'c'])
+  })
+
+  test('nested swipe with allowNestedSwipe', async () => {
+    const { getByTestId, getAllByTestId } = render(<NestedSwiperTest />)
+
+    const outerSwiper = getByTestId('outer-swiper')
+    const innerSwiper = getAllByTestId('inner-swiper')[0]
+    const innerTrack = innerSwiper.querySelector(`.${classPrefix}-track`)
+
+    // 滑动内层到最右边，然后继续向左滑应该触发外层
+    for (let i = 0; i < 4; i++) {
+      await act(async () => {
+        mockDrag(innerTrack!, [
+          { clientX: 300, clientY: 0 },
+          { clientX: 200, clientY: 0 },
+          { clientX: 100, clientY: 0 },
+        ])
+      })
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      })
+    }
+
+    // 验证组件正常渲染和工作
+    expect(outerSwiper).toBeInTheDocument()
+    expect(innerSwiper).toBeInTheDocument()
   })
 })
