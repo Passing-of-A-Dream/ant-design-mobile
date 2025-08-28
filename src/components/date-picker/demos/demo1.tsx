@@ -315,6 +315,7 @@ function FieldsDemo() {
         onConfirm={val => {
           Toast.show(val.toString())
         }}
+        precision='second'
         columns={[
           HOUR_COLUMN,
           MINUTE_COLUMN,

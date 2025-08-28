@@ -47,10 +47,12 @@ export function normalizeDateColumnsOrder(
   const seen = new Set<DateColumns>()
 
   for (const c of columns) {
-    if (!validSet.has(c))
-      throw new Error(`DateColumnsOrder contains invalid value: ${String(c)}`)
-    if (!seen.add(c))
-      throw new Error('DateColumnsOrder contains duplicate values')
+    if (!validSet.has(c)) {
+      console.warn(`DateColumnsOrder contains invalid value: ${String(c)}`)
+    }
+    if (!seen.add(c)) {
+      console.warn('DateColumnsOrder contains duplicate values')
+    }
   }
 
   return [...columns, ...allKeys.filter(k => !seen.has(k))]
