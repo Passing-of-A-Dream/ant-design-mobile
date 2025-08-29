@@ -49,207 +49,167 @@ export function generateDatePickerColumns(
   tillNow?: boolean,
   columns?: DateColumnsOrder
 ) {
-  const ret: PickerColumn[] = []
-
-  const minYear = min.getFullYear()
-  const minMonth = min.getMonth() + 1
-  const minDay = min.getDate()
-  const minHour = min.getHours()
-  const minMinute = min.getMinutes()
-  const minSecond = min.getSeconds()
-
-  const maxYear = max.getFullYear()
-  const maxMonth = max.getMonth() + 1
-  const maxDay = max.getDate()
-  const maxHour = max.getHours()
-  const maxMinute = max.getMinutes()
-  const maxSecond = max.getSeconds()
+  const dateConfig = {
+    year: { min: min.getFullYear(), max: max.getFullYear(), range: [0, 0] },
+    month: { min: min.getMonth() + 1, max: max.getMonth() + 1, range: [1, 12] },
+    day: { min: min.getDate(), max: max.getDate(), range: [1, 31] },
+    hour: { min: min.getHours(), max: max.getHours(), range: [0, 23] },
+    minute: { min: min.getMinutes(), max: max.getMinutes(), range: [0, 59] },
+    second: { min: min.getSeconds(), max: max.getSeconds(), range: [0, 59] },
+  }
 
   const rank = precisionRankRecord[precision]
-
-  const order: DateColumnsOrder = normalizeDateColumnsOrder(columns)
+  const order = normalizeDateColumnsOrder(columns)
   const presentOrder = order.filter(
     k => precisionRankRecord[k as DatePrecision] <= rank
   )
   const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth() + 1
-  const currentDay = now.getDate()
-  const safeGet = (key: DateColumns): string | undefined => {
+
+  const getSelectedValue = (key: DateColumns, defaultValue: number): number => {
     const i = keyToIndexMap.get(key)
-    if (i === undefined || i < 0) return undefined
+    if (i === undefined || i < 0) return defaultValue
     const v = selected?.[i]
-    if (v === TILL_NOW || v === undefined || v === null) return undefined
-    return v
+    if (v === TILL_NOW || !v) return defaultValue
+    return parseInt(v)
   }
 
-  const selectedYear = parseInt(
-    safeGet(YEAR_COLUMN) ??
-      Math.min(Math.max(currentYear, minYear), maxYear).toString()
-  )
-  const selectedMonth = parseInt(
-    safeGet(MONTH_COLUMN) ?? currentMonth.toString()
-  )
-  const selectedDay = parseInt(safeGet(DAY_COLUMN) ?? currentDay.toString())
-  const selectedHour = parseInt(safeGet(HOUR_COLUMN) ?? '0')
-  const selectedMinute = parseInt(safeGet(MINUTE_COLUMN) ?? '0')
-  const selectedSecond = parseInt(safeGet(SECOND_COLUMN) ?? '0')
+  const now = new Date()
+  const selectedValues = {
+    year: getSelectedValue(
+      YEAR_COLUMN,
+      Math.min(
+        Math.max(now.getFullYear(), dateConfig.year.min),
+        dateConfig.year.max
+      )
+    ),
+    month: getSelectedValue(MONTH_COLUMN, now.getMonth() + 1),
+    day: getSelectedValue(DAY_COLUMN, now.getDate()),
+    hour: getSelectedValue(HOUR_COLUMN, 0),
+    minute: getSelectedValue(MINUTE_COLUMN, 0),
+    second: getSelectedValue(SECOND_COLUMN, 0),
+  }
 
-  const firstDayInSelectedMonth = dayjs(
-    convertStringArrayToDate([
-      selectedYear.toString(),
-      selectedMonth.toString(),
-      '1',
-    ])
-  )
+  const isAtBoundary = (
+    type: 'min' | 'max',
+    ...units: DatePrecision[]
+  ): boolean => {
+    const config =
+      type === 'min'
+        ? (unit: DatePrecision) => dateConfig[unit].min
+        : (unit: DatePrecision) => dateConfig[unit].max
 
-  const isInMinYear = selectedYear === minYear
-  const isInMaxYear = selectedYear === maxYear
-  const isInMinMonth = isInMinYear && selectedMonth === minMonth
-  const isInMaxMonth = isInMaxYear && selectedMonth === maxMonth
-  const isInMinDay = isInMinMonth && selectedDay === minDay
-  const isInMaxDay = isInMaxMonth && selectedDay === maxDay
-  const isInMinHour = isInMinDay && selectedHour === minHour
-  const isInMaxHour = isInMaxDay && selectedHour === maxHour
-  const isInMinMinute = isInMinHour && selectedMinute === minMinute
-  const isInMaxMinute = isInMaxHour && selectedMinute === maxMinute
+    return units.every(unit => selectedValues[unit] === config(unit))
+  }
 
-  const generateColumn = (
-    from: number,
-    to: number,
-    precision: DatePrecision
-  ) => {
-    let column: number[] = []
-    for (let i = from; i <= to; i++) {
-      column.push(i)
-    }
-    const buildStringArrayFor = (p: DatePrecision, val: number): string[] => {
-      const v = val.toString()
-      switch (p) {
-        case 'year':
-          return [v]
-        case 'month':
-          return [selectedYear.toString(), v]
-        case 'day':
-          return [selectedYear.toString(), selectedMonth.toString(), v]
-        case 'hour':
-          return [
-            selectedYear.toString(),
-            selectedMonth.toString(),
-            selectedDay.toString(),
-            v,
-          ]
-        case 'minute':
-          return [
-            selectedYear.toString(),
-            selectedMonth.toString(),
-            selectedDay.toString(),
-            selectedHour.toString(),
-            v,
-          ]
-        case 'second':
-          return [
-            selectedYear.toString(),
-            selectedMonth.toString(),
-            selectedDay.toString(),
-            selectedHour.toString(),
-            selectedMinute.toString(),
-            v,
-          ]
+  const createColumn = (
+    unit: DatePrecision,
+    dependencies: DatePrecision[] = []
+  ): PickerColumn | undefined => {
+    if (rank < precisionRankRecord[unit]) return undefined
+
+    let lower = dateConfig[unit].range[0]
+    let upper = dateConfig[unit].range[1]
+
+    // 动态计算边界
+    if (dependencies.length > 0) {
+      if (isAtBoundary('min', ...dependencies)) {
+        lower = dateConfig[unit].min
       }
+      if (isAtBoundary('max', ...dependencies)) {
+        upper = dateConfig[unit].max
+      }
+    } else {
+      lower = dateConfig[unit].min
+      upper = dateConfig[unit].max
     }
-    const currentFilter = filter?.[precision]
+
+    if (unit === 'day' && !isAtBoundary('max', 'year', 'month')) {
+      const firstDay = dayjs(
+        convertStringArrayToDate([
+          selectedValues.year.toString(),
+          selectedValues.month.toString(),
+          '1',
+        ])
+      )
+      upper = firstDay.daysInMonth()
+    }
+
+    let values: number[] = []
+    for (let i = lower; i <= upper; i++) {
+      values.push(i)
+    }
+
+    const currentFilter = filter?.[unit]
     if (currentFilter && typeof currentFilter === 'function') {
-      column = column.filter(i =>
-        currentFilter(i, {
+      values = values.filter(i => {
+        const stringArray = buildStringArrayFor(unit, i, selectedValues)
+        return currentFilter(i, {
           get date() {
-            const stringArray = buildStringArrayFor(precision, i)
             return convertStringArrayToDate(stringArray)
           },
         })
-      )
+      })
     }
-    return column
-  }
 
-  let yearCol: PickerColumn | null = null
-  if (rank >= precisionRankRecord.year) {
-    const lower = minYear
-    const upper = maxYear
-    const years = generateColumn(lower, upper, 'year')
-    yearCol = years.map(v => ({
-      label: renderLabel('year', v, { selected: selectedYear === v }),
+    return values.map(v => ({
+      label: renderLabel(unit, v, { selected: selectedValues[unit] === v }),
       value: v.toString(),
     }))
   }
 
-  let monthCol: PickerColumn | null = null
-  if (rank >= precisionRankRecord.month) {
-    const lower = isInMinYear ? minMonth : 1
-    const upper = isInMaxYear ? maxMonth : 12
-    const months = generateColumn(lower, upper, 'month')
-    monthCol = months.map(v => ({
-      label: renderLabel('month', v, { selected: selectedMonth === v }),
-      value: v.toString(),
-    }))
-  }
-  let dayCol: PickerColumn | null = null
-  if (rank >= precisionRankRecord.day) {
-    const lower = isInMinMonth ? minDay : 1
-    const upper = isInMaxMonth ? maxDay : firstDayInSelectedMonth.daysInMonth()
-    const days = generateColumn(lower, upper, 'day')
-    dayCol = days.map(v => ({
-      label: renderLabel('day', v, { selected: selectedDay === v }),
-      value: v.toString(),
-    }))
+  const buildStringArrayFor = (
+    unit: DatePrecision,
+    value: number,
+    selected: typeof selectedValues
+  ): string[] => {
+    const units: DatePrecision[] = [
+      'year',
+      'month',
+      'day',
+      'hour',
+      'minute',
+      'second',
+    ]
+    const unitIndex = units.indexOf(unit)
+    const result: string[] = []
+
+    for (let i = 0; i <= unitIndex; i++) {
+      if (i === unitIndex) {
+        result.push(value.toString())
+      } else {
+        result.push(selected[units[i] as keyof typeof selected].toString())
+      }
+    }
+
+    return result
   }
 
-  const columnsMap: Partial<Record<DateColumns, PickerColumn>> = {}
-  if (yearCol) columnsMap[YEAR_COLUMN] = yearCol
-  if (monthCol) columnsMap[MONTH_COLUMN] = monthCol
-  if (dayCol) columnsMap[DAY_COLUMN] = dayCol
-
-  if (rank >= precisionRankRecord.hour) {
-    const lower = isInMinDay ? minHour : 0
-    const upper = isInMaxDay ? maxHour : 23
-    const hours = generateColumn(lower, upper, 'hour')
-    columnsMap[HOUR_COLUMN] = hours.map(v => ({
-      label: renderLabel('hour', v, { selected: selectedHour === v }),
-      value: v.toString(),
-    }))
-  }
-  if (rank >= precisionRankRecord.minute) {
-    const lower = isInMinHour ? minMinute : 0
-    const upper = isInMaxHour ? maxMinute : 59
-    const minutes = generateColumn(lower, upper, 'minute')
-    columnsMap[MINUTE_COLUMN] = minutes.map(v => ({
-      label: renderLabel('minute', v, { selected: selectedMinute === v }),
-      value: v.toString(),
-    }))
-  }
-  if (rank >= precisionRankRecord.second) {
-    const lower = isInMinMinute ? minSecond : 0
-    const upper = isInMaxMinute ? maxSecond : 59
-    const seconds = generateColumn(lower, upper, 'second')
-    columnsMap[SECOND_COLUMN] = seconds.map(v => ({
-      label: renderLabel('second', v, { selected: selectedSecond === v }),
-      value: v.toString(),
-    }))
+  const columnsMap: Partial<Record<DateColumns, PickerColumn>> = {
+    [YEAR_COLUMN]: createColumn('year'),
+    [MONTH_COLUMN]: createColumn('month', ['year']),
+    [DAY_COLUMN]: createColumn('day', ['year', 'month']),
+    [HOUR_COLUMN]: createColumn('hour', ['year', 'month', 'day']),
+    [MINUTE_COLUMN]: createColumn('minute', ['year', 'month', 'day', 'hour']),
+    [SECOND_COLUMN]: createColumn('second', [
+      'year',
+      'month',
+      'day',
+      'hour',
+      'minute',
+    ]),
   }
 
-  const columnsOrder = normalizeDateColumnsOrder(columns)
+  const ret: PickerColumn[] = []
   const neededKeysInOrder = columns?.length
-    ? columnsOrder.filter(k => columns.includes(k as DateColumns))
-    : columnsOrder.filter(k => precisionRankRecord[k as DatePrecision] <= rank)
+    ? order.filter(k => columns.includes(k as DateColumns))
+    : order.filter(k => precisionRankRecord[k as DatePrecision] <= rank)
 
   for (const key of neededKeysInOrder) {
     const col = columnsMap[key]
     if (col) ret.push(col)
   }
 
-  // Till Now
-  if (tillNow) {
+  if (tillNow && ret.length > 0) {
     ret[0].push({
       label: renderLabel('now', null as never, {
         selected: selected[0] === TILL_NOW,
@@ -257,8 +217,8 @@ export function generateDatePickerColumns(
       value: TILL_NOW,
     })
 
-    if (TILL_NOW === selected?.[0]) {
-      for (let i = 1; i < ret.length; i += 1) {
+    if (selected?.[0] === TILL_NOW) {
+      for (let i = 1; i < ret.length; i++) {
         ret[i] = []
       }
     }
