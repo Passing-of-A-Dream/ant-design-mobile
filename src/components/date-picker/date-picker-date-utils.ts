@@ -60,17 +60,21 @@ export function generateDatePickerColumns(
 
   const rank = precisionRankRecord[precision]
   const order = normalizeDateColumnsOrder(columns)
-  const presentOrder = order.filter(
-    k => precisionRankRecord[k as DatePrecision] <= rank
-  )
-  const keyToIndexMap = new Map(presentOrder.map((key, i) => [key, i]))
+  const neededKeysInOrder = columns?.length
+    ? order.filter(
+        k =>
+          columns.includes(k as DateColumns) &&
+          precisionRankRecord[k as DatePrecision] <= rank
+      )
+    : order.filter(k => precisionRankRecord[k as DatePrecision] <= rank)
+  const keyToIndexMap = new Map(neededKeysInOrder.map((key, i) => [key, i]))
 
   const getSelectedValue = (key: DateColumns, defaultValue: number): number => {
     const i = keyToIndexMap.get(key)
-    if (i === undefined || i < 0) return defaultValue
+    if (i === undefined || i < 0 || i >= selected.length) return defaultValue
     const v = selected?.[i]
     if (v === TILL_NOW || !v) return defaultValue
-    return parseInt(v)
+    return parseInt(v, 10)
   }
 
   const now = new Date()
@@ -110,7 +114,6 @@ export function generateDatePickerColumns(
     let lower = dateConfig[unit].range[0]
     let upper = dateConfig[unit].range[1]
 
-    // 动态计算边界
     if (dependencies.length > 0) {
       if (isAtBoundary('min', ...dependencies)) {
         lower = dateConfig[unit].min
@@ -200,9 +203,6 @@ export function generateDatePickerColumns(
   }
 
   const ret: PickerColumn[] = []
-  const neededKeysInOrder = columns?.length
-    ? order.filter(k => columns.includes(k as DateColumns))
-    : order.filter(k => precisionRankRecord[k as DatePrecision] <= rank)
 
   for (const key of neededKeysInOrder) {
     const col = columnsMap[key]
