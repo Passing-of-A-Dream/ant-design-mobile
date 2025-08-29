@@ -45,15 +45,19 @@ export function normalizeDateColumnsOrder(
 
   const validSet = new Set(allKeys)
   const seen = new Set<DateColumns>()
+  const normalized: DateColumns[] = []
 
   for (const c of columns) {
     if (!validSet.has(c)) {
       console.warn(`DateColumnsOrder contains invalid value: ${String(c)}`)
+      continue
     }
     if (!seen.add(c)) {
       console.warn('DateColumnsOrder contains duplicate values')
+      continue
     }
+    normalized.push(c)
   }
 
-  return [...columns, ...allKeys.filter(k => !seen.has(k))]
+  return [...normalized, ...allKeys.filter(k => !seen.has(k))]
 }
