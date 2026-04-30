@@ -11,50 +11,6 @@ function $$(className: string) {
 
 const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
-// 嵌套 Swiper 测试组件
-const NestedSwiperTest = () => {
-  const outerColors = ['red', 'green', 'blue']
-  const innerColors = ['lightblue', 'lightgreen', 'lightyellow', 'lightpink']
-
-  const InnerSwiper = () => (
-    <Swiper loop={false} style={{ height: '100px' }} data-testid='inner-swiper'>
-      {innerColors.map((color, index) => (
-        <Swiper.Item key={index}>
-          <div
-            style={{
-              height: 100,
-              background: color,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            内层 {index + 1}
-          </div>
-        </Swiper.Item>
-      ))}
-    </Swiper>
-  )
-
-  return (
-    <Swiper
-      allowNestedSwipe
-      loop={false}
-      style={{ height: '150px' }}
-      data-testid='outer-swiper'
-    >
-      {outerColors.map((color, index) => (
-        <Swiper.Item key={index}>
-          <div style={{ height: 150, background: color, padding: 10 }}>
-            <div>外层 {index + 1}</div>
-            <InnerSwiper />
-          </div>
-        </Swiper.Item>
-      ))}
-    </Swiper>
-  )
-}
-
 describe('Swiper', () => {
   const items = [1, 2, 3].map(item => (
     <Swiper.Item key={item}>
@@ -524,15 +480,71 @@ describe('Swiper', () => {
     expect(mountLog).toEqual(['a', 'b', 'c'])
   })
 
-  test('nested swipe with allowNestedSwipe', async () => {
-    const { getByTestId, getAllByTestId } = render(<NestedSwiperTest />)
+  test('nested swipe with allowNestedSwipe should pass boundary to outer swiper', async () => {
+    const outerOnIndexChange = jest.fn()
+    const innerOnIndexChange = jest.fn()
 
-    const outerSwiper = getByTestId('outer-swiper')
+    const NestedSwiperWithCallbacks = () => {
+      const outerColors = ['red', 'green', 'blue']
+      const innerColors = [
+        'lightblue',
+        'lightgreen',
+        'lightyellow',
+        'lightpink',
+      ]
+
+      const InnerSwiper = () => (
+        <Swiper
+          loop={false}
+          style={{ height: '100px' }}
+          data-testid='inner-swiper'
+          onIndexChange={innerOnIndexChange}
+        >
+          {innerColors.map((color, index) => (
+            <Swiper.Item key={index}>
+              <div
+                style={{
+                  height: 100,
+                  background: color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                内层 {index + 1}
+              </div>
+            </Swiper.Item>
+          ))}
+        </Swiper>
+      )
+
+      return (
+        <Swiper
+          allowNestedSwipe
+          loop={false}
+          style={{ height: '150px' }}
+          data-testid='outer-swiper'
+          onIndexChange={outerOnIndexChange}
+        >
+          {outerColors.map((color, index) => (
+            <Swiper.Item key={index}>
+              <div style={{ height: 150, background: color, padding: 10 }}>
+                <div>外层 {index + 1}</div>
+                <InnerSwiper />
+              </div>
+            </Swiper.Item>
+          ))}
+        </Swiper>
+      )
+    }
+
+    const { getAllByTestId } = render(<NestedSwiperWithCallbacks />)
+
     const innerSwiper = getAllByTestId('inner-swiper')[0]
     const innerTrack = innerSwiper.querySelector(`.${classPrefix}-track`)
 
-    // 滑动内层到最右边，然后继续向左滑应该触发外层
-    for (let i = 0; i < 4; i++) {
+    // 把内层向左滑几次
+    for (let i = 0; i < 3; i++) {
       await act(async () => {
         mockDrag(innerTrack!, [
           { clientX: 300, clientY: 0 },
@@ -545,8 +557,69 @@ describe('Swiper', () => {
       })
     }
 
-    // 验证组件正常渲染和工作
-    expect(outerSwiper).toBeInTheDocument()
-    expect(innerSwiper).toBeInTheDocument()
+    expect(innerOnIndexChange).toHaveBeenCalledWith(1)
+    expect(innerOnIndexChange).toHaveBeenCalledWith(2)
+  })
+
+  test('nested swipe reverse: inner at index 0 swiping prev should pass boundary to outer', async () => {
+    const outerOnIndexChange = jest.fn()
+    const innerOnIndexChange = jest.fn()
+
+    const NestedSwiperReverse = () => {
+      const outerColors = ['red', 'green', 'blue']
+      const innerColors = ['lightblue', 'lightgreen', 'lightyellow']
+
+      const InnerSwiper = () => (
+        <Swiper
+          loop={false}
+          style={{ height: '100px' }}
+          data-testid='inner-swiper'
+          onIndexChange={innerOnIndexChange}
+        >
+          {innerColors.map((color, index) => (
+            <Swiper.Item key={index}>
+              <div style={{ height: 100, background: color }}>
+                内层 {index + 1}
+              </div>
+            </Swiper.Item>
+          ))}
+        </Swiper>
+      )
+
+      return (
+        <Swiper
+          allowNestedSwipe
+          loop={false}
+          defaultIndex={2}
+          style={{ height: '150px' }}
+          data-testid='outer-swiper'
+          onIndexChange={outerOnIndexChange}
+        >
+          {outerColors.map((color, index) => (
+            <Swiper.Item key={index}>
+              <div style={{ height: 150, background: color, padding: 10 }}>
+                <InnerSwiper />
+              </div>
+            </Swiper.Item>
+          ))}
+        </Swiper>
+      )
+    }
+
+    const { getAllByTestId } = render(<NestedSwiperReverse />)
+
+    const innerSwiper = getAllByTestId('inner-swiper')[0]
+    const innerTrack = innerSwiper.querySelector(`.${classPrefix}-track`)
+
+    // 内层在 index 0，继续右滑（prev 方向），应放行给外层
+    await act(async () => {
+      mockDrag(innerTrack!, [
+        { clientX: 100, clientY: 0 },
+        { clientX: 200, clientY: 0 },
+        { clientX: 300, clientY: 0 },
+      ])
+    })
+
+    expect(outerOnIndexChange).toHaveBeenCalledWith(1)
   })
 })

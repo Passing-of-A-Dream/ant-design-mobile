@@ -114,11 +114,9 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
 
     // 嵌套 Swiper 逻辑
     const parentContext = useContext(NestedSwiperContext)
-    const currentDirection: NestedSwiperDirection = isVertical
-      ? 'vertical'
-      : 'horizontal'
+    const currentDirection = isVertical ? 'vertical' : 'horizontal'
 
-    const slideRatio = props.slideSize / 100
+    const slideRatio = Math.max(props.slideSize, 1) / 100
     const offsetRatio = props.trackOffset / 100
 
     const { validChildren, count, renderChildren } = useMemo(() => {
@@ -246,31 +244,18 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
             )
             const boundedIndex = bound(targetIndex, minIndex, maxIndex)
 
-            // 检查是否会触发边界，如果是则尝试通知父级
-            const currentIndex = getCurrent()
-            let shouldNotifyParent = false
-            let swipeDirection: 'next' | 'prev' = 'next'
-
-            if (!loop) {
-              if (
-                targetIndex >= mergedTotal &&
-                currentIndex === mergedTotal - 1
-              ) {
-                shouldNotifyParent = true
-                swipeDirection = 'next'
-              } else if (targetIndex < 0 && currentIndex === 0) {
-                shouldNotifyParent = true
-                swipeDirection = 'prev'
+            // 嵌套边界放行：overflow 在 bounds 钳制前计算，可靠检测越界方向
+            const overflow = state.overflow[paramIndex]
+            if (!loop && overflow !== 0 && parentContext) {
+              const swipeDirection: 'next' | 'prev' =
+                overflow > 0 ? 'next' : 'prev'
+              if (handleBoundaryReached(swipeDirection)) {
+                const boundaryIndex =
+                  swipeDirection === 'next' ? mergedTotal - 1 : 0
+                swipeTo(boundaryIndex)
+                setDragging(false)
+                return
               }
-            }
-
-            if (shouldNotifyParent && handleBoundaryReached(swipeDirection)) {
-              // 父级处理了边界，先将子级位置归位到边界
-              const boundaryIndex =
-                swipeDirection === 'next' ? mergedTotal - 1 : 0
-              swipeTo(boundaryIndex)
-              setDragging(false)
-              return
             }
 
             // 正常滑动
@@ -344,37 +329,11 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
       }
 
       function swipeNext() {
-        const currentIndex = Math.round(position.get() / 100)
-        const nextIndex = currentIndex + 1
-
-        // 检查是否会超出右边界
-        if (!loop && nextIndex >= mergedTotal) {
-          // 先归位到最后一个位置
-          swipeTo(mergedTotal - 1)
-          // 然后尝试通知父级处理
-          if (handleBoundaryReached('next')) {
-            return // 父级处理了，不继续执行
-          }
-        }
-
-        swipeTo(nextIndex)
+        swipeTo(Math.round(position.get() / 100) + 1)
       }
 
       function swipePrev() {
-        const currentIndex = Math.round(position.get() / 100)
-        const prevIndex = currentIndex - 1
-
-        // 检查是否会超出左边界
-        if (!loop && prevIndex < 0) {
-          // 先归位到第一个位置
-          swipeTo(0)
-          // 然后尝试通知父级处理
-          if (handleBoundaryReached('prev')) {
-            return // 父级处理了，不继续执行
-          }
-        }
-
-        swipeTo(prevIndex)
+        swipeTo(Math.round(position.get() / 100) - 1)
       }
 
       useImperativeHandle(ref, () => ({
@@ -554,26 +513,22 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
         props.allowNestedSwipe
           ? {
               notifyBoundaryReached: (
-                direction: NestedSwiperDirection,
+                childDirection: NestedSwiperDirection,
                 swipeDirection: 'next' | 'prev'
               ) => {
-                // 只处理同方向的嵌套滑动
-                if (direction !== currentDirection) {
+                if (childDirection !== currentDirection) {
                   return false
                 }
-
-                console.log(
-                  `接收到子级边界通知: ${direction} ${swipeDirection}`
-                )
-
-                // 执行对应的滑动
-                if (swipeDirection === 'next') {
-                  swipeNext()
-                } else {
-                  swipePrev()
+                const currentIndex = Math.round(position.get() / 100)
+                const nextIndex =
+                  swipeDirection === 'next'
+                    ? currentIndex + 1
+                    : currentIndex - 1
+                if (nextIndex < 0 || nextIndex >= mergedTotal) {
+                  return false
                 }
-
-                return true // 表示已处理
+                swipeTo(nextIndex)
+                return true
               },
               direction: currentDirection,
             }

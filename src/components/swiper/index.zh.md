@@ -38,6 +38,10 @@
 
 <code src="./demos/demo8.tsx"></code>
 
+### 同向嵌套边界验证
+
+<code src="./demos/demo11.tsx"></code>
+
 <code src="./demos/demo9.tsx" debug></code>
 
 <code src="./demos/demo6.tsx" debug></code>
