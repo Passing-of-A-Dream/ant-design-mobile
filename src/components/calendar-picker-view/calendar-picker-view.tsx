@@ -142,14 +142,14 @@ export const CalendarPickerView = forwardRef<
       setDefaultMin(target)
     }
     if (!props.max) {
-      setDefaultMax(target.add(VISIBLE_MONTHS, 'month').endOf('month'))
+      setDefaultMax(target.add(VISIBLE_MONTHS, 'month'))
     }
   }
 
   // 记录默认的 min 和 max，并在外部的值超出边界时自动扩充
   const [defaultMin, setDefaultMin] = useState(current)
   const [defaultMax, setDefaultMax] = useState(() =>
-    current.add(VISIBLE_MONTHS, 'month').endOf('month')
+    current.add(VISIBLE_MONTHS, 'month')
   )
 
   useEffect(() => {
