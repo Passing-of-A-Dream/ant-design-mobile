@@ -195,6 +195,44 @@ describe('Calendar', () => {
     expect(container.querySelectorAll(`.${classPrefix}-cell`)).toHaveLength(30)
   })
 
+  test('jumpTo expands defaultMin/defaultMax when no min/max set', () => {
+    const App = () => {
+      const ref = useRef<CalendarPickerViewRef>(null)
+      return (
+        <>
+          <button
+            onClick={() => {
+              ref.current?.jumpTo({ year: 2021, month: 1 })
+            }}
+          >
+            jumpTo
+          </button>
+          <button
+            onClick={() => {
+              ref.current?.jumpTo({ year: 2026, month: 12 })
+            }}
+          >
+            jumpToFuture
+          </button>
+          <CalendarPickerView ref={ref} selectionMode='single' />
+        </>
+      )
+    }
+    const { container, getByText } = render(<App />)
+
+    // defaultMin starts at today (2023-05), jumpTo 2021-01 should expand rendering range
+    fireEvent.click(getByText('jumpTo'))
+    expect(
+      container.querySelector('[data-year-month="2021-1"]')
+    ).toBeInTheDocument()
+
+    // jumpToFuture 2026-12 should also expand defaultMax
+    fireEvent.click(getByText('jumpToFuture'))
+    expect(
+      container.querySelector('[data-year-month="2026-12"]')
+    ).toBeInTheDocument()
+  })
+
   test('auto expand month list', () => {
     const { container, rerender } = render(
       <CalendarPickerView value={new Date(2024, 9, 1)} selectionMode='single' />

@@ -162,6 +162,18 @@ export const CalendarPickerView = forwardRef<
   )
 
   // ================================ Refs ================================
+  const jumpToPage = (page: Page) => {
+    const next = convertPageToDayjs(page)
+    if (!props.min && next.isBefore(defaultMin)) {
+      setDefaultMin(next.date(1))
+    }
+    if (!props.max && next.isAfter(defaultMax)) {
+      setDefaultMax(next.endOf('month'))
+    }
+    setCurrent(next)
+    scrollTo(next)
+  }
+
   useImperativeHandle(ref, () => ({
     jumpTo: pageOrPageGenerator => {
       let page: Page
@@ -173,14 +185,11 @@ export const CalendarPickerView = forwardRef<
       } else {
         page = pageOrPageGenerator
       }
-      const next = convertPageToDayjs(page)
-      setCurrent(next)
-      scrollTo(next)
+      jumpToPage(page)
     },
     jumpToToday: () => {
-      const next = dayjs().date(1)
-      setCurrent(next)
-      scrollTo(next)
+      const today = dayjs()
+      jumpToPage({ year: today.year(), month: today.month() + 1 })
     },
     getDateRange: () => dateRange,
   }))
