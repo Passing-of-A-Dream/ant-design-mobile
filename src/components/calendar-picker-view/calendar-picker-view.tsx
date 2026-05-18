@@ -150,7 +150,7 @@ export const CalendarPickerView = forwardRef<
         setDefaultMax(dayjs(endDate).endOf('month'))
       }
     }
-  }, [dateRange])
+  }, [dateRange, defaultMin, defaultMax, props.min, props.max])
 
   const maxDay = useMemo(
     () => (props.max ? dayjs(props.max) : defaultMax),
@@ -164,17 +164,19 @@ export const CalendarPickerView = forwardRef<
   // ================================ Refs ================================
   const jumpToPage = (page: Page) => {
     let next = convertPageToDayjs(page)
-    if (!props.min && next.isBefore(defaultMin)) {
-      setDefaultMin(next)
-    }
-    if (!props.max && next.isAfter(defaultMax)) {
-      setDefaultMax(next.endOf('month'))
-    }
     if (props.min && next.isBefore(minDay)) {
       next = minDay
     }
     if (props.max && next.isAfter(maxDay)) {
       next = maxDay.date(1)
+    }
+    if (next.isBefore(defaultMin) || next.isAfter(defaultMax)) {
+      if (!props.min) {
+        setDefaultMin(next)
+      }
+      if (!props.max) {
+        setDefaultMax(next.add(6, 'month').endOf('month'))
+      }
     }
     setCurrent(next)
     scrollTo(next)

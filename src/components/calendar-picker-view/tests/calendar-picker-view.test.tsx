@@ -195,7 +195,7 @@ describe('Calendar', () => {
     expect(container.querySelectorAll(`.${classPrefix}-cell`)).toHaveLength(30)
   })
 
-  test('jumpTo expands defaultMin/defaultMax when no min/max set', () => {
+  test('jumpTo expands rendering range', () => {
     const App = () => {
       const ref = useRef<CalendarPickerViewRef>(null)
       return (
@@ -205,7 +205,7 @@ describe('Calendar', () => {
               ref.current?.jumpTo({ year: 2021, month: 1 })
             }}
           >
-            jumpTo
+            jumpToPast
           </button>
           <button
             onClick={() => {
@@ -220,16 +220,51 @@ describe('Calendar', () => {
     }
     const { container, getByText } = render(<App />)
 
-    // defaultMin starts at today (2023-05), jumpTo 2021-01 should expand rendering range
-    fireEvent.click(getByText('jumpTo'))
+    // defaultMin starts at today (2023-05), jumpTo 2021-01 resets window around target
+    fireEvent.click(getByText('jumpToPast'))
     expect(
       container.querySelector('[data-year-month="2021-1"]')
     ).toBeInTheDocument()
 
-    // jumpToFuture 2026-12 should also expand defaultMax
+    // jumpToFuture 2026-12 resets window, 2021-1 should no longer be rendered
     fireEvent.click(getByText('jumpToFuture'))
     expect(
       container.querySelector('[data-year-month="2026-12"]')
+    ).toBeInTheDocument()
+    expect(
+      container.querySelector('[data-year-month="2021-1"]')
+    ).not.toBeInTheDocument()
+  })
+
+  test('jumpTo keeps selected date in rendering range', () => {
+    const App = () => {
+      const ref = useRef<CalendarPickerViewRef>(null)
+      return (
+        <>
+          <button
+            onClick={() => {
+              ref.current?.jumpTo({ year: 2021, month: 1 })
+            }}
+          >
+            jumpToPast
+          </button>
+          <CalendarPickerView
+            ref={ref}
+            selectionMode='single'
+            defaultValue={new Date(2023, 4, 15)}
+          />
+        </>
+      )
+    }
+    const { container, getByText } = render(<App />)
+
+    // Selected date is 2023-05, jumpTo 2021-01 should keep 2023-05 rendered
+    fireEvent.click(getByText('jumpToPast'))
+    expect(
+      container.querySelector('[data-year-month="2021-1"]')
+    ).toBeInTheDocument()
+    expect(
+      container.querySelector('[data-year-month="2023-5"]')
     ).toBeInTheDocument()
   })
 
