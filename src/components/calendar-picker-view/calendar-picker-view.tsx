@@ -163,12 +163,18 @@ export const CalendarPickerView = forwardRef<
 
   // ================================ Refs ================================
   const jumpToPage = (page: Page) => {
-    const next = convertPageToDayjs(page)
+    let next = convertPageToDayjs(page)
     if (!props.min && next.isBefore(defaultMin)) {
-      setDefaultMin(next.date(1))
+      setDefaultMin(next)
     }
     if (!props.max && next.isAfter(defaultMax)) {
       setDefaultMax(next.endOf('month'))
+    }
+    if (props.min && next.isBefore(minDay)) {
+      next = minDay
+    }
+    if (props.max && next.isAfter(maxDay)) {
+      next = maxDay.date(1)
     }
     setCurrent(next)
     scrollTo(next)

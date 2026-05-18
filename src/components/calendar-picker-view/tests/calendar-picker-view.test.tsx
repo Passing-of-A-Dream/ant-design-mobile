@@ -233,6 +233,49 @@ describe('Calendar', () => {
     ).toBeInTheDocument()
   })
 
+  test('jumpTo clamps to min/max when bounds are set', () => {
+    const App = () => {
+      const ref = useRef<CalendarPickerViewRef>(null)
+      return (
+        <>
+          <button
+            onClick={() => {
+              ref.current?.jumpTo({ year: 2020, month: 1 })
+            }}
+          >
+            jumpBeforeMin
+          </button>
+          <button
+            onClick={() => {
+              ref.current?.jumpTo({ year: 2025, month: 6 })
+            }}
+          >
+            jumpAfterMax
+          </button>
+          <CalendarPickerView
+            ref={ref}
+            selectionMode='single'
+            min={new Date(2023, 0)}
+            max={new Date(2023, 11, 31)}
+          />
+        </>
+      )
+    }
+    const { container, getByText } = render(<App />)
+
+    // jumpTo before min should clamp to min month (2023-01)
+    fireEvent.click(getByText('jumpBeforeMin'))
+    expect(
+      container.querySelector('[data-year-month="2023-1"]')
+    ).toBeInTheDocument()
+
+    // jumpTo after max should clamp to max month (2023-12)
+    fireEvent.click(getByText('jumpAfterMax'))
+    expect(
+      container.querySelector('[data-year-month="2023-12"]')
+    ).toBeInTheDocument()
+  })
+
   test('auto expand month list', () => {
     const { container, rerender } = render(
       <CalendarPickerView value={new Date(2024, 9, 1)} selectionMode='single' />
