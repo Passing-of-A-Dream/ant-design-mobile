@@ -135,9 +135,22 @@ export const CalendarPickerView = forwardRef<
   const scrollTo = useSyncScroll(current, context.visible, bodyRef)
 
   // ============================== Boundary ==============================
+  const VISIBLE_MONTHS = 6
+
+  const alignRange = (target: dayjs.Dayjs) => {
+    if (!props.min) {
+      setDefaultMin(target)
+    }
+    if (!props.max) {
+      setDefaultMax(target.add(VISIBLE_MONTHS, 'month').endOf('month'))
+    }
+  }
+
   // 记录默认的 min 和 max，并在外部的值超出边界时自动扩充
   const [defaultMin, setDefaultMin] = useState(current)
-  const [defaultMax, setDefaultMax] = useState(() => current.add(6, 'month'))
+  const [defaultMax, setDefaultMax] = useState(() =>
+    current.add(VISIBLE_MONTHS, 'month').endOf('month')
+  )
 
   useEffect(() => {
     if (dateRange) {
@@ -171,12 +184,7 @@ export const CalendarPickerView = forwardRef<
       next = maxDay.date(1)
     }
     if (next.isBefore(defaultMin) || next.isAfter(defaultMax)) {
-      if (!props.min) {
-        setDefaultMin(next)
-      }
-      if (!props.max) {
-        setDefaultMax(next.add(6, 'month').endOf('month'))
-      }
+      alignRange(next)
     }
     setCurrent(next)
     scrollTo(next)
