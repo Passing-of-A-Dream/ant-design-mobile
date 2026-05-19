@@ -10,6 +10,7 @@ import React, {
   cloneElement,
   forwardRef,
   isValidElement,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -78,14 +79,43 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     // 计算 navs 的 top 值
     const [top, setTop] = useState<number>()
     const containerRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-      const container = containerRef.current
-      if (!container) return
-      if (value) {
+    const frameRef = useRef<number>()
+
+    const updateTop = useCallback(() => {
+      cancelAnimationFrame(frameRef.current!)
+
+      frameRef.current = requestAnimationFrame(() => {
+        const container = containerRef.current
+        if (!container) return
+
         const rect = container.getBoundingClientRect()
-        setTop(rect.bottom)
+        const nextTop = rect.bottom
+
+        setTop(prev => {
+          if (prev === nextTop) return prev
+          return nextTop
+        })
+      })
+    }, [])
+
+    useEffect(() => {
+      if (!value) return
+
+      updateTop()
+
+      window.addEventListener('scroll', updateTop, {
+        passive: true,
+        capture: true,
+      })
+      window.addEventListener('resize', updateTop)
+
+      return () => {
+        cancelAnimationFrame(frameRef.current!)
+
+        window.removeEventListener('scroll', updateTop, true)
+        window.removeEventListener('resize', updateTop)
       }
-    }, [value])
+    }, [value, updateTop])
 
     const changeActive = (key: string | null) => {
       if (value === key) {
