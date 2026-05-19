@@ -82,7 +82,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     const frameRef = useRef<number>()
 
     const updateTop = useCallback(() => {
-      cancelAnimationFrame(frameRef.current!)
+      if (frameRef.current) cancelAnimationFrame(frameRef.current)
 
       frameRef.current = requestAnimationFrame(() => {
         const container = containerRef.current
@@ -101,7 +101,11 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     useEffect(() => {
       if (!value) return
 
-      updateTop()
+      const container = containerRef.current
+      if (container) {
+        const nextTop = container.getBoundingClientRect().bottom
+        setTop(prev => (prev === nextTop ? prev : nextTop))
+      }
 
       window.addEventListener('scroll', updateTop, {
         passive: true,
@@ -110,7 +114,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       window.addEventListener('resize', updateTop)
 
       return () => {
-        cancelAnimationFrame(frameRef.current!)
+        if (frameRef.current) cancelAnimationFrame(frameRef.current)
 
         window.removeEventListener('scroll', updateTop, true)
         window.removeEventListener('resize', updateTop)
