@@ -10,11 +10,13 @@ import React, {
   cloneElement,
   forwardRef,
   isValidElement,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from 'react'
+import raf from 'rc-util/lib/raf'
 import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProp, mergeProps } from '../../utils/with-default-props'
@@ -78,14 +80,38 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     // 计算 navs 的 top 值
     const [top, setTop] = useState<number>()
     const containerRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
+    const rafIdRef = useRef<number>(0)
+
+    const updatePosition = useCallback(() => {
       const container = containerRef.current
       if (!container) return
-      if (value) {
-        const rect = container.getBoundingClientRect()
-        setTop(rect.bottom)
+      setTop(container.getBoundingClientRect().bottom)
+    }, [])
+
+    const updateTop = useCallback(() => {
+      raf.cancel(rafIdRef.current)
+
+      rafIdRef.current = raf(updatePosition)
+    }, [updatePosition])
+
+    useEffect(() => {
+      if (!value) return
+
+      updatePosition()
+
+      window.addEventListener('scroll', updateTop, {
+        passive: true,
+        capture: true,
+      })
+      window.addEventListener('resize', updateTop)
+
+      return () => {
+        raf.cancel(rafIdRef.current)
+
+        window.removeEventListener('scroll', updateTop, true)
+        window.removeEventListener('resize', updateTop)
       }
-    }, [value])
+    }, [value, updateTop, updatePosition])
 
     const changeActive = (key: string | null) => {
       if (value === key) {
