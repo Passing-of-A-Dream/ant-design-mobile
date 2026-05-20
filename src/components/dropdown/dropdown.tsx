@@ -80,19 +80,16 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     // 计算 navs 的 top 值
     const [top, setTop] = useState<number>()
     const containerRef = useRef<HTMLDivElement>(null)
-    const rafIdRef = useRef<number>()
+    const rafIdRef = useRef<number>(0)
 
     const updatePosition = useCallback(() => {
       const container = containerRef.current
       if (!container) return
-      const nextTop = container.getBoundingClientRect().bottom
-      setTop(prev => (prev === nextTop ? prev : nextTop))
+      setTop(container.getBoundingClientRect().bottom)
     }, [])
 
     const updateTop = useCallback(() => {
-      if (rafIdRef.current != null) {
-        raf.cancel(rafIdRef.current)
-      }
+      raf.cancel(rafIdRef.current)
 
       rafIdRef.current = raf(updatePosition)
     }, [updatePosition])
@@ -109,9 +106,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       window.addEventListener('resize', updateTop)
 
       return () => {
-        if (rafIdRef.current != null) {
-          raf.cancel(rafIdRef.current)
-        }
+        raf.cancel(rafIdRef.current)
 
         window.removeEventListener('scroll', updateTop, true)
         window.removeEventListener('resize', updateTop)
