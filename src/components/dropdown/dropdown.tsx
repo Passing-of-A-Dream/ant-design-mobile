@@ -16,6 +16,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import raf from 'rc-util/lib/raf'
 import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProp, mergeProps } from '../../utils/with-default-props'
@@ -79,33 +80,27 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     // 计算 navs 的 top 值
     const [top, setTop] = useState<number>()
     const containerRef = useRef<HTMLDivElement>(null)
-    const frameRef = useRef<number>()
+    const rafIdRef = useRef<number>()
+
+    const updatePosition = useCallback(() => {
+      const container = containerRef.current
+      if (!container) return
+      const nextTop = container.getBoundingClientRect().bottom
+      setTop(prev => (prev === nextTop ? prev : nextTop))
+    }, [])
 
     const updateTop = useCallback(() => {
-      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+      if (rafIdRef.current != null) {
+        raf.cancel(rafIdRef.current)
+      }
 
-      frameRef.current = requestAnimationFrame(() => {
-        const container = containerRef.current
-        if (!container) return
-
-        const rect = container.getBoundingClientRect()
-        const nextTop = rect.bottom
-
-        setTop(prev => {
-          if (prev === nextTop) return prev
-          return nextTop
-        })
-      })
-    }, [])
+      rafIdRef.current = raf(updatePosition)
+    }, [updatePosition])
 
     useEffect(() => {
       if (!value) return
 
-      const container = containerRef.current
-      if (container) {
-        const nextTop = container.getBoundingClientRect().bottom
-        setTop(prev => (prev === nextTop ? prev : nextTop))
-      }
+      updatePosition()
 
       window.addEventListener('scroll', updateTop, {
         passive: true,
@@ -114,12 +109,14 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       window.addEventListener('resize', updateTop)
 
       return () => {
-        if (frameRef.current) cancelAnimationFrame(frameRef.current)
+        if (rafIdRef.current != null) {
+          raf.cancel(rafIdRef.current)
+        }
 
         window.removeEventListener('scroll', updateTop, true)
         window.removeEventListener('resize', updateTop)
       }
-    }, [value, updateTop])
+    }, [value, updateTop, updatePosition])
 
     const changeActive = (key: string | null) => {
       if (value === key) {
