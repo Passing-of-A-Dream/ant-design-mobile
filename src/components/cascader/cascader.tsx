@@ -163,6 +163,7 @@ export const Cascader = forwardRef<CascaderRef, CascaderProps>((p, ref) => {
 
   const popupElement = (
     <Popup
+      className={`${classPrefix}-popup`}
       visible={visible}
       position='bottom'
       onMaskClick={() => {
