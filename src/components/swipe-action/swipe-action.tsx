@@ -181,13 +181,13 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
       if (!root) return
       function onTouchOutside(e: Event) {
         if (x.get() === 0) return
-        if (!root.contains(e.target as Node)) {
+        if (!root?.contains(e.target as Node)) {
           close()
         }
       }
       function onFocusOutside(e: FocusEvent) {
         if (x.get() === 0) return
-        if (!root.contains(e.relatedTarget as Node)) {
+        if (!root?.contains(e.relatedTarget as Node)) {
           close()
         }
       }
