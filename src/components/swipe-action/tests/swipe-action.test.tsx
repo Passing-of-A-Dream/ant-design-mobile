@@ -1,6 +1,7 @@
 import { Dialog } from 'antd-mobile'
 import React, { useRef } from 'react'
 import {
+  act,
   fireEvent,
   mockDrag,
   render,
@@ -289,5 +290,28 @@ describe('SwipeAction', () => {
 
     await userEvent.click(getByText('pin'))
     await waitFor(() => expect(onClose).toBeCalledTimes(1))
+  })
+
+  test('focus on action should open and focusout should close', async () => {
+    const onActionsReveal = jest.fn()
+    const { container } = render(<App onActionsReveal={onActionsReveal} />)
+
+    const rightButton = container.querySelector(
+      `.${classPrefix}-actions-right button`
+    ) as HTMLElement
+    act(() => {
+      rightButton.focus()
+    })
+
+    const track = container.querySelector(`.${classPrefix}-track`)!
+    await waitFor(() =>
+      expect(track).toHaveStyle(`transform: translate3d(-${width}px,0,0)`)
+    )
+    expect(onActionsReveal).toBeCalledWith('right')
+
+    const root = container.querySelector(`.${classPrefix}`)!
+    fireEvent.focusOut(root, { relatedTarget: document.body })
+
+    await waitFor(() => expect(track).toHaveStyle(`transform: none`))
   })
 })
