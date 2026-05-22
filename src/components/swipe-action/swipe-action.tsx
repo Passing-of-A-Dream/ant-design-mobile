@@ -180,13 +180,13 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
       const root = rootRef.current
       if (!root) return
       function onTouchOutside(e: Event) {
-        if (x.get() === 0) return
+        if (x.goal === 0) return
         if (!root?.contains(e.target as Node)) {
           close()
         }
       }
       function onFocusOutside(e: FocusEvent) {
-        if (x.get() === 0) return
+        if (x.goal === 0) return
         if (!root?.contains(e.relatedTarget as Node)) {
           close()
         }
@@ -241,7 +241,7 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
               className={`${classPrefix}-actions ${classPrefix}-actions-left`}
               ref={leftRef}
               onFocus={() => {
-                if (x.get() !== getLeftWidth()) open('left')
+                if (x.goal !== getLeftWidth()) open('left')
               }}
             >
               {props.leftActions.map(renderAction)}
@@ -273,7 +273,7 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
               className={`${classPrefix}-actions ${classPrefix}-actions-right`}
               ref={rightRef}
               onFocus={() => {
-                if (x.get() !== -getRightWidth()) open('right')
+                if (x.goal !== -getRightWidth()) open('right')
               }}
             >
               {props.rightActions.map(renderAction)}
