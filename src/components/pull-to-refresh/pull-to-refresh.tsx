@@ -1,3 +1,6 @@
+import { animated, useSpring } from '@react-spring/web'
+import { useDrag } from '@use-gesture/react'
+import type { ReactNode } from 'react'
 import React, {
   forwardRef,
   useEffect,
@@ -5,32 +8,20 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import type { ReactNode } from 'react'
-import { mergeProps } from '../../utils/with-default-props'
-import { animated, useSpring } from '@react-spring/web'
-import { useDrag } from '@use-gesture/react'
-import { getScrollParent } from '../../utils/get-scroll-parent'
-import { supportsPassive } from '../../utils/supports-passive'
 import { convertPx } from '../../utils/convert-px'
+import { getScrollParent } from '../../utils/get-scroll-parent'
 import { rubberbandIfOutOfBounds } from '../../utils/rubberband'
-import { useConfig } from '../config-provider'
 import { sleep } from '../../utils/sleep'
+import { supportsPassive } from '../../utils/supports-passive'
+import { mergeProps } from '../../utils/with-default-props'
+import { useConfig } from '../config-provider'
 
 const classPrefix = `adm-pull-to-refresh`
 
 export type PullStatus = 'pulling' | 'canRelease' | 'refreshing' | 'complete'
 
 export type PullToRefreshRef = {
-  /**
-   * Manually trigger a refresh (same as user pulling down).
-   * Only works when current status is 'pulling'.
-   */
   startRefresh: () => void
-  /**
-   * Manually complete the current refresh.
-   * Only works when current status is 'refreshing'.
-   * Useful when onRefresh does not return a Promise (e.g. rtk-query).
-   */
   completeRefresh: () => void
 }
 
@@ -120,14 +111,11 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
       try {
         await props.onRefresh()
       } catch (e) {
-        // Only reset if still in refreshing state (not manually completed)
         if (statusRef.current === 'refreshing') {
           reset()
         }
         throw e
       }
-      // Auto-complete only if still in refreshing state
-      // (if completeRefresh was called during onRefresh, skip auto-complete)
       if (statusRef.current === 'refreshing') {
         await doCompleteRefresh()
       }
@@ -141,8 +129,6 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
       await reset()
     }
 
-    // Use refs to hold the latest functions so that useImperativeHandle
-    // always calls the up-to-date versions without recreating the handle.
     const doRefreshRef = useRef(doRefresh)
     doRefreshRef.current = doRefresh
     const doCompleteRefreshRef = useRef(doCompleteRefresh)
