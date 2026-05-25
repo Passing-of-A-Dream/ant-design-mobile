@@ -1,10 +1,18 @@
 import { renderHook, act } from '@testing-library/react'
-import { useSpringVisibility } from '../use-spring-visibility'
+import { useSpringResumeOnVisible } from '../use-spring-resume-on-visible'
 
-describe('useSpringVisibility', () => {
+function setVisibilityState(state: 'visible' | 'hidden') {
+  Object.defineProperty(document, 'visibilityState', {
+    value: state,
+    writable: true,
+  })
+}
+
+describe('useSpringResumeOnVisible', () => {
   const mockSetActive = jest.fn()
   const mockAfterClose = jest.fn()
   const mockUnmountedRef = { current: false }
+  const mockActiveRef = { current: true }
   const originalVisibilityState = Object.getOwnPropertyDescriptor(
     document,
     'visibilityState'
@@ -13,6 +21,7 @@ describe('useSpringVisibility', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUnmountedRef.current = false
+    mockActiveRef.current = true
   })
 
   afterEach(() => {
@@ -26,21 +35,17 @@ describe('useSpringVisibility', () => {
   })
 
   it('should call setActive(false) and afterClose when page becomes visible after close while hidden', () => {
-    const { result } = renderHook(() =>
-      useSpringVisibility({
+    renderHook(() =>
+      useSpringResumeOnVisible({
         visible: false,
-        active: true,
+        activeRef: mockActiveRef,
         setActive: mockSetActive,
         afterClose: mockAfterClose,
         unmountedRef: mockUnmountedRef,
       })
     )
 
-    // Simulate page becoming visible (visibilitychange event)
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
-      writable: true,
-    })
+    setVisibilityState('visible')
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'))
     })
@@ -50,20 +55,19 @@ describe('useSpringVisibility', () => {
   })
 
   it('should not call afterClose when page is already visible and active matches visible', () => {
+    mockActiveRef.current = false
+
     renderHook(() =>
-      useSpringVisibility({
+      useSpringResumeOnVisible({
         visible: false,
-        active: false,
+        activeRef: mockActiveRef,
         setActive: mockSetActive,
         afterClose: mockAfterClose,
         unmountedRef: mockUnmountedRef,
       })
     )
 
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
-      writable: true,
-    })
+    setVisibilityState('visible')
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'))
     })
@@ -76,19 +80,16 @@ describe('useSpringVisibility', () => {
     mockUnmountedRef.current = true
 
     renderHook(() =>
-      useSpringVisibility({
+      useSpringResumeOnVisible({
         visible: false,
-        active: true,
+        activeRef: mockActiveRef,
         setActive: mockSetActive,
         afterClose: mockAfterClose,
         unmountedRef: mockUnmountedRef,
       })
     )
 
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
-      writable: true,
-    })
+    setVisibilityState('visible')
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'))
     })
@@ -99,9 +100,9 @@ describe('useSpringVisibility', () => {
 
   it('shouldCallAfterClose should prevent double-calling afterClose', () => {
     const { result } = renderHook(() =>
-      useSpringVisibility({
+      useSpringResumeOnVisible({
         visible: false,
-        active: true,
+        activeRef: mockActiveRef,
         setActive: mockSetActive,
         afterClose: mockAfterClose,
         unmountedRef: mockUnmountedRef,
@@ -109,10 +110,7 @@ describe('useSpringVisibility', () => {
     )
 
     // Simulate visibilitychange handler calling afterClose first
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'visible',
-      writable: true,
-    })
+    setVisibilityState('visible')
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'))
     })
@@ -124,10 +122,12 @@ describe('useSpringVisibility', () => {
   })
 
   it('shouldCallAfterClose should return true when afterClose has not been called', () => {
+    mockActiveRef.current = false
+
     const { result } = renderHook(() =>
-      useSpringVisibility({
+      useSpringResumeOnVisible({
         visible: false,
-        active: false,
+        activeRef: mockActiveRef,
         setActive: mockSetActive,
         afterClose: mockAfterClose,
         unmountedRef: mockUnmountedRef,
@@ -143,9 +143,9 @@ describe('useSpringVisibility', () => {
   it('should reset closedRef when visible becomes true', () => {
     const { result, rerender } = renderHook(
       ({ visible }: { visible: boolean }) =>
-        useSpringVisibility({
+        useSpringResumeOnVisible({
           visible,
-          active: true,
+          activeRef: mockActiveRef,
           setActive: mockSetActive,
           afterClose: mockAfterClose,
           unmountedRef: mockUnmountedRef,
@@ -167,19 +167,16 @@ describe('useSpringVisibility', () => {
 
   it('should not trigger on visibilitychange when document is hidden', () => {
     renderHook(() =>
-      useSpringVisibility({
+      useSpringResumeOnVisible({
         visible: false,
-        active: true,
+        activeRef: mockActiveRef,
         setActive: mockSetActive,
         afterClose: mockAfterClose,
         unmountedRef: mockUnmountedRef,
       })
     )
 
-    Object.defineProperty(document, 'visibilityState', {
-      value: 'hidden',
-      writable: true,
-    })
+    setVisibilityState('hidden')
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'))
     })

@@ -14,7 +14,7 @@ import { defaultPopupBaseProps, PopupBaseProps } from './popup-base-props'
 import { useInnerVisible } from '../../utils/use-inner-visible'
 import { useConfig } from '../config-provider'
 import { useDrag } from '@use-gesture/react'
-import { useSpringVisibility } from '../../utils/use-spring-visibility'
+import { useSpringResumeOnVisible } from './use-spring-resume-on-visible'
 
 const classPrefix = `adm-popup`
 
@@ -42,13 +42,15 @@ export const Popup: FC<PopupProps> = p => {
   )
 
   const [active, setActive] = useState(props.visible)
+  const activeRef = useRef(active)
+  activeRef.current = active
   const ref = useRef<HTMLDivElement>(null)
   useLockScroll(ref, props.disableBodyScroll && active ? 'strict' : false)
 
   const unmountedRef = useUnmountedRef()
-  const { shouldCallAfterClose } = useSpringVisibility({
+  const { shouldCallAfterClose } = useSpringResumeOnVisible({
     visible: props.visible,
-    active,
+    activeRef,
     setActive,
     afterClose: props.afterClose,
     unmountedRef,

@@ -8,7 +8,7 @@ import { renderToContainer } from '../../utils/render-to-container'
 import { ShouldRender } from '../../utils/should-render'
 import { useInnerVisible } from '../../utils/use-inner-visible'
 import { useLockScroll } from '../../utils/use-lock-scroll'
-import { useSpringVisibility } from '../../utils/use-spring-visibility'
+import { useSpringResumeOnVisible } from '../popup/use-spring-resume-on-visible'
 import { mergeProps } from '../../utils/with-default-props'
 import { withStopPropagation } from '../../utils/with-stop-propagation'
 import { useConfig } from '../config-provider'
@@ -44,9 +44,11 @@ export const CenterPopup: FC<CenterPopupProps> = props => {
 
   const unmountedRef = useUnmountedRef()
   const [active, setActive] = useState(mergedProps.visible)
-  const { shouldCallAfterClose } = useSpringVisibility({
+  const activeRef = useRef(active)
+  activeRef.current = active
+  const { shouldCallAfterClose } = useSpringResumeOnVisible({
     visible: mergedProps.visible,
-    active,
+    activeRef,
     setActive,
     afterClose: mergedProps.afterClose,
     unmountedRef,
