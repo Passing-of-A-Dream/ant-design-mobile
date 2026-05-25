@@ -23,6 +23,8 @@ describe('Popup', () => {
         'visibilityState',
         originalVisibilityState
       )
+    } else {
+      delete (document as any).visibilityState
     }
   })
 
@@ -129,6 +131,11 @@ describe('Popup', () => {
           foobar
         </Popup>
       )
+
+      setVisibilityState('hidden')
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
 
       // Simulate page becoming visible (e.g. user switches back to tab)
       setVisibilityState('visible')
