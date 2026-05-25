@@ -7,6 +7,7 @@ function setVisibilityState(state: 'visible' | 'hidden') {
   Object.defineProperty(document, 'visibilityState', {
     value: state,
     writable: true,
+    configurable: true,
   })
 }
 
