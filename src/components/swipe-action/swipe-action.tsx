@@ -197,7 +197,7 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
         document.removeEventListener('touchstart', onTouchOutside)
         root.removeEventListener('focusout', onFocusOutside)
       }
-    }, [props.closeOnTouchOutside])
+    }, [props.closeOnTouchOutside, props.onClose])
 
     function renderAction(action: Action) {
       const color = action.color ?? 'light'
