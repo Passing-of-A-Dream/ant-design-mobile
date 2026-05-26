@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useSpringResumeOnVisible } from '../use-spring-resume-on-visible'
+import { useSpringResumeOnVisible } from '../../../utils/use-spring-resume-on-visible'
 
 function setVisibilityState(state: 'visible' | 'hidden') {
   Object.defineProperty(document, 'visibilityState', {

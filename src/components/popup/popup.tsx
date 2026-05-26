@@ -14,7 +14,7 @@ import { defaultPopupBaseProps, PopupBaseProps } from './popup-base-props'
 import { useInnerVisible } from '../../utils/use-inner-visible'
 import { useConfig } from '../config-provider'
 import { useDrag } from '@use-gesture/react'
-import { useSpringResumeOnVisible } from './use-spring-resume-on-visible'
+import { useSpringResumeOnVisible } from '../../utils/use-spring-resume-on-visible'
 
 const classPrefix = `adm-popup`
 

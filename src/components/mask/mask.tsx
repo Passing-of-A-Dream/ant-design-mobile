@@ -15,7 +15,7 @@ import {
   PropagationEvent,
   withStopPropagation,
 } from '../../utils/with-stop-propagation'
-import { useSpringResumeOnVisible } from '../popup/use-spring-resume-on-visible'
+import { useSpringResumeOnVisible } from '../../utils/use-spring-resume-on-visible'
 
 const classPrefix = `adm-mask`
 
