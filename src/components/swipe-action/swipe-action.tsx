@@ -97,6 +97,15 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
       draggingRef.current = false
     }
 
+    function open(side: SideType) {
+      if (side === 'right') {
+        api.start({ x: -getRightWidth() })
+      } else {
+        api.start({ x: getLeftWidth() })
+      }
+      p.onActionsReveal?.(side)
+    }
+
     const bind = useDrag(
       state => {
         dragCancelRef.current = state.cancel
@@ -161,36 +170,34 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
 
     useImperativeHandle(ref, () => ({
       show: (side: SideType = 'right') => {
-        if (side === 'right') {
-          api.start({
-            x: -getRightWidth(),
-          })
-        } else if (side === 'left') {
-          api.start({
-            x: getLeftWidth(),
-          })
-        }
-        p.onActionsReveal?.(side)
+        open(side)
       },
       close,
     }))
 
     useEffect(() => {
       if (!props.closeOnTouchOutside) return
-      function handle(e: Event) {
-        if (x.get() === 0) {
-          return
-        }
-        const root = rootRef.current
-        if (root && !root.contains(e.target as Node)) {
+      const root = rootRef.current
+      if (!root) return
+      function onTouchOutside(e: Event) {
+        if (x.goal === 0) return
+        if (!root?.contains(e.target as Node)) {
           close()
         }
       }
-      document.addEventListener('touchstart', handle)
-      return () => {
-        document.removeEventListener('touchstart', handle)
+      function onFocusOutside(e: FocusEvent) {
+        if (x.goal === 0) return
+        if (!root?.contains(e.relatedTarget as Node)) {
+          close()
+        }
       }
-    }, [props.closeOnTouchOutside])
+      document.addEventListener('touchstart', onTouchOutside)
+      root.addEventListener('focusout', onFocusOutside)
+      return () => {
+        document.removeEventListener('touchstart', onTouchOutside)
+        root.removeEventListener('focusout', onFocusOutside)
+      }
+    }, [props.closeOnTouchOutside, props.onClose])
 
     function renderAction(action: Action) {
       const color = action.color ?? 'light'
@@ -233,6 +240,9 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
             <div
               className={`${classPrefix}-actions ${classPrefix}-actions-left`}
               ref={leftRef}
+              onFocus={() => {
+                if (x.goal !== getLeftWidth()) open('left')
+              }}
             >
               {props.leftActions.map(renderAction)}
             </div>
@@ -262,6 +272,9 @@ export const SwipeAction = forwardRef<SwipeActionRef, SwipeActionProps>(
             <div
               className={`${classPrefix}-actions ${classPrefix}-actions-right`}
               ref={rightRef}
+              onFocus={() => {
+                if (x.goal !== -getRightWidth()) open('right')
+              }}
             >
               {props.rightActions.map(renderAction)}
             </div>
