@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { PullToRefresh, List, Button } from 'antd-mobile'
 import type { PullToRefreshRef } from '..'
 import { lorem } from 'demos'
@@ -14,6 +14,15 @@ function getNextData() {
 export default () => {
   const [data, setData] = useState(() => getNextData())
   const ref = useRef<PullToRefreshRef>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <>
@@ -26,15 +35,11 @@ export default () => {
       <PullToRefresh
         ref={ref}
         onRefresh={() => {
-          return new Promise<void>(() => {
-            // Never resolve — manually call completeRefresh() when done.
-            // This is useful when onRefresh cannot return a Promise
-            // (e.g. rtk-query, callbacks, event-driven data sources).
-            setTimeout(() => {
-              setData(prev => [...getNextData(), ...prev])
-              ref.current?.completeRefresh()
-            }, 2000)
-          })
+          timeoutRef.current = setTimeout(() => {
+            setData(prev => [...getNextData(), ...prev])
+            ref.current?.completeRefresh()
+          }, 2000)
+          return Promise.resolve()
         }}
       >
         <List style={{ minHeight: '100vh' }}>

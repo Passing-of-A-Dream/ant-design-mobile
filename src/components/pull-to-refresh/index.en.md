@@ -61,7 +61,7 @@ type PullToRefreshRef = {
 | Method | Description |
 | --- | --- |
 | startRefresh | Manually trigger a refresh (same as user pulling down) |
-| completeRefresh | Manually complete the current refresh (useful when onRefresh cannot return a Promise, e.g. rtk-query) |
+| completeRefresh | Manually complete the current refresh (useful when onRefresh cannot return a Promise, e.g. callback-based APIs or event-driven data sources) |
 
 ## FAQ
 

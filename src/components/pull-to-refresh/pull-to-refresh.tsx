@@ -68,9 +68,11 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
     const [status, setStatus] = useState<PullStatus>('pulling')
 
     const statusRef = useRef<PullStatus>(status)
-    useEffect(() => {
-      statusRef.current = status
-    }, [status])
+
+    const setStatusWithRef = (next: PullStatus) => {
+      statusRef.current = next
+      setStatus(next)
+    }
 
     const [springStyles, api] = useSpring(() => ({
       from: { height: 0 },
@@ -88,7 +90,12 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
 
     //防止下拉时抖动
     useEffect(() => {
-      elementRef.current?.addEventListener('touchmove', () => {})
+      const noop = () => {}
+      const element = elementRef.current
+      element?.addEventListener('touchmove', noop)
+      return () => {
+        element?.removeEventListener('touchmove', noop)
+      }
     }, [])
 
     const reset = () => {
@@ -98,7 +105,7 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
             height: 0,
           },
           onResolve() {
-            setStatus('pulling')
+            setStatusWithRef('pulling')
             resolve()
           },
         })
@@ -106,8 +113,11 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
     }
 
     async function doRefresh() {
+      if (props.disabled) return
+      const current = statusRef.current
+      if (current !== 'pulling' && current !== 'canRelease') return
       api.start({ height: headHeight })
-      setStatus('refreshing')
+      setStatusWithRef('refreshing')
       try {
         await props.onRefresh()
       } catch (e) {
@@ -122,7 +132,8 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
     }
 
     async function doCompleteRefresh() {
-      setStatus('complete')
+      if (statusRef.current !== 'refreshing') return
+      setStatusWithRef('complete')
       if (props.completeDelay > 0) {
         await sleep(props.completeDelay)
       }
@@ -138,14 +149,10 @@ export const PullToRefresh = forwardRef<PullToRefreshRef, PullToRefreshProps>(
       ref,
       () => ({
         startRefresh: () => {
-          if (statusRef.current === 'pulling') {
-            doRefreshRef.current().catch(() => {})
-          }
+          doRefreshRef.current().catch(() => {})
         },
         completeRefresh: () => {
-          if (statusRef.current === 'refreshing') {
-            doCompleteRefreshRef.current()
-          }
+          doCompleteRefreshRef.current()
         },
       }),
       []

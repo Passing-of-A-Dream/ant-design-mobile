@@ -61,7 +61,7 @@ type PullToRefreshRef = {
 | 方法 | 说明 |
 | --- | --- |
 | startRefresh | 手动触发刷新（与用户下拉触发效果一致） |
-| completeRefresh | 手动结束刷新（适用于 onRefresh 无法返回 Promise 的场景，如 rtk-query） |
+| completeRefresh | 手动结束刷新（适用于 onRefresh 无法返回 Promise 的场景，如基于回调的 API 或事件驱动的数据源） |
 
 ## 常见问题
 
