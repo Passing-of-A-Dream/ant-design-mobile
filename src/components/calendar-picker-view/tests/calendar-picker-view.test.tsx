@@ -258,14 +258,14 @@ describe('Calendar', () => {
     }
     const { container, getByText } = render(<App />)
 
-    // Selected date is 2023-05, jumpTo 2021-01 should keep 2023-05 rendered
+    // Selected date is 2023-05, jumpTo 2021-01 should NOT keep 2023-05 rendered
     fireEvent.click(getByText('jumpToPast'))
     expect(
       container.querySelector('[data-year-month="2021-1"]')
     ).toBeInTheDocument()
     expect(
       container.querySelector('[data-year-month="2023-5"]')
-    ).toBeInTheDocument()
+    ).not.toBeInTheDocument()
   })
 
   test('jumpTo clamps to min/max when bounds are set', () => {
