@@ -30,6 +30,11 @@ export type CascaderValueExtend = {
   isLeaf: boolean
 }
 
+export type CascaderViewOptionRender = (
+  option: CascaderOption,
+  depth: number
+) => ReactNode
+
 export type CascaderViewProps = {
   options: CascaderOption[]
   value?: CascaderValue[]
@@ -40,6 +45,7 @@ export type CascaderViewProps = {
   activeIcon?: ReactNode
   loading?: boolean
   fieldNames?: FieldNamesType
+  optionRender?: CascaderViewOptionRender
 } & NativeProps<'--height'>
 
 const defaultProps = {
@@ -143,8 +149,8 @@ export const CascaderView: FC<CascaderViewProps> = p => {
                   {selected
                     ? selected[labelName]
                     : typeof placeholder === 'function'
-                    ? placeholder(index)
-                    : placeholder}
+                      ? placeholder(index)
+                      : placeholder}
                 </div>
               }
               forceRender
@@ -188,7 +194,9 @@ export const CascaderView: FC<CascaderViewProps> = p => {
                             [`${classPrefix}-item-active`]: active,
                           })}
                         >
-                          {option[labelName]}
+                          {props.optionRender
+                            ? props.optionRender(option, index)
+                            : option[labelName]}
                         </CheckList.Item>
                       )
                     })}

@@ -14,6 +14,7 @@ import CascaderView, {
   CascaderOption,
   CascaderValue,
   CascaderValueExtend,
+  CascaderViewOptionRender,
 } from '../cascader-view'
 import { useCascaderValueExtend } from '../cascader-view/use-cascader-value-extend'
 import { useConfig } from '../config-provider'
@@ -49,6 +50,7 @@ export type CascaderProps = {
   onTabsChange?: (index: number) => void
   activeIcon?: ReactNode
   fieldNames?: FieldNamesType
+  optionRender?: CascaderViewOptionRender
 } & Pick<
   PopupProps,
   | 'getContainer'

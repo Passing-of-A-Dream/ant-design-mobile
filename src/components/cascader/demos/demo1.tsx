@@ -4,6 +4,39 @@ import { DemoBlock, DemoDescription } from 'demos'
 
 import { options, longOptions } from './data'
 
+// 自定义选项渲染
+function ItemRenderDemo() {
+  const [visible, setVisible] = useState(false)
+  return (
+    <>
+      <Button
+        onClick={() => {
+          setVisible(true)
+        }}
+      >
+        选择
+      </Button>
+      <Cascader
+        options={options}
+        visible={visible}
+        onClose={() => {
+          setVisible(false)
+        }}
+        optionRender={(option, depth) => (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {option.label}
+            {option.disabled && (
+              <span style={{ fontSize: 12, color: 'var(--adm-color-weak)' }}>
+                已满
+              </span>
+            )}
+          </span>
+        )}
+      />
+    </>
+  )
+}
+
 // 基础用法
 function BasicDemo() {
   const [visible, setVisible] = useState(false)
@@ -118,6 +151,10 @@ export default () => {
         >
           选择
         </Button>
+      </DemoBlock>
+
+      <DemoBlock title='自定义选项渲染'>
+        <ItemRenderDemo />
       </DemoBlock>
 
       <DemoBlock title='使用 actions 来控制显示/隐藏'>
