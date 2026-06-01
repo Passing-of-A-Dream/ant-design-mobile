@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import type { FC, ReactNode } from 'react'
-import classNames from 'classnames'
-import Tabs from '../tabs'
-import CheckList, { CheckListValue } from '../check-list'
-import { NativeProps, withNativeProps } from '../../utils/native-props'
-import { mergeProps } from '../../utils/with-default-props'
-import { usePropsValue } from '../../utils/use-props-value'
-import { useCascaderValueExtend } from './use-cascader-value-extend'
-import { useConfig } from '../config-provider'
-import { optionSkeleton } from './option-skeleton'
-import Skeleton from '../skeleton'
 import { useUpdateEffect } from 'ahooks'
+import classNames from 'classnames'
+import type { FC, ReactNode } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import type { BaseOptionType, FieldNamesType } from '../../hooks'
 import { useFieldNames } from '../../hooks'
-import type { FieldNamesType, BaseOptionType } from '../../hooks'
+import { NativeProps, withNativeProps } from '../../utils/native-props'
+import { usePropsValue } from '../../utils/use-props-value'
+import { mergeProps } from '../../utils/with-default-props'
+import CheckList, { CheckListValue } from '../check-list'
+import { useConfig } from '../config-provider'
+import Skeleton from '../skeleton'
+import Tabs from '../tabs'
+import { optionSkeleton } from './option-skeleton'
+import { useCascaderValueExtend } from './use-cascader-value-extend'
 
 const classPrefix = `adm-cascader-view`
 
@@ -32,7 +32,8 @@ export type CascaderValueExtend = {
 
 export type CascaderViewOptionRender = (
   option: CascaderOption,
-  depth: number
+  depth: number,
+  active: boolean
 ) => ReactNode
 
 export type CascaderViewProps = {
@@ -195,7 +196,7 @@ export const CascaderView: FC<CascaderViewProps> = p => {
                           })}
                         >
                           {props.optionRender
-                            ? props.optionRender(option, index)
+                            ? props.optionRender(option, index, active)
                             : option[labelName]}
                         </CheckList.Item>
                       )
