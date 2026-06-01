@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { Cascader, Button, Space, Toast } from 'antd-mobile'
+import { Button, Cascader, Space, Toast } from 'antd-mobile'
 import { DemoBlock, DemoDescription } from 'demos'
+import React, { useState } from 'react'
 
-import { options, longOptions } from './data'
+import { longOptions, options } from './data'
 
 // 自定义选项渲染
 function ItemRenderDemo() {
@@ -22,7 +22,7 @@ function ItemRenderDemo() {
         onClose={() => {
           setVisible(false)
         }}
-        optionRender={(option, depth) => (
+        optionRender={option => (
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {option.label}
             {option.disabled && (
