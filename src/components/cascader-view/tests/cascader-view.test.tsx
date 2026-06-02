@@ -137,4 +137,20 @@ describe('CascaderView', () => {
 
     expect(baseElement.querySelector('.adm-skeleton')).toBeInTheDocument()
   })
+
+  test('optionRender', async () => {
+    const { getByText } = render(
+      <CascaderView
+        options={options}
+        optionRender={(option, { depth }) => (
+          <span>
+            {option.label}-{depth}
+          </span>
+        )}
+      />
+    )
+    expect(getByText('浙江-0')).toBeInTheDocument()
+    fireEvent.click(getByText('浙江-0'))
+    expect(getByText('杭州-1')).toBeInTheDocument()
+  })
 })

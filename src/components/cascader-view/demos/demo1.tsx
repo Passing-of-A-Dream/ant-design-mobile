@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
 import { CascaderView } from 'antd-mobile'
 import { DemoBlock } from 'demos'
+import React, { useState } from 'react'
 
 import { options, sameValueOptions } from '../../cascader/demos/data'
 
@@ -21,6 +21,22 @@ export default () => {
             setValue(val)
             console.log('onChange', val, extend.items)
           }}
+        />
+      </DemoBlock>
+
+      <DemoBlock title='自定义选项渲染' padding='0'>
+        <CascaderView
+          options={options}
+          optionRender={option => (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {option.label}
+              {option.disabled && (
+                <span style={{ fontSize: 12, color: 'var(--adm-color-weak)' }}>
+                  已满
+                </span>
+              )}
+            </span>
+          )}
         />
       </DemoBlock>
 

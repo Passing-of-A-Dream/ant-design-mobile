@@ -5,6 +5,8 @@ import { optionSkeleton } from './option-skeleton'
 
 export type {
   CascaderViewProps,
+  CascaderViewOptionRender,
+  CascaderViewOptionRenderInfo,
   CascaderValue,
   CascaderValueExtend,
   CascaderOption,

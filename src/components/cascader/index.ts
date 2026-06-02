@@ -10,6 +10,8 @@ export type {
   CascaderValue,
   CascaderValueExtend,
   CascaderOption,
+  CascaderViewOptionRender,
+  CascaderViewOptionRenderInfo,
 } from '../cascader-view'
 
 export default attachPropertiesToComponent(Cascader, {

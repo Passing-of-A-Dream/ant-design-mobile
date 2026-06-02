@@ -21,6 +21,7 @@ CascaderView 是 [Cascader](/zh/components/cascader) 的内容区域。
 | placeholder | 未选中时的提示文案 | `string` \| `(index: number) => string` | `'请选择'` |
 | value | 选中项 | `CascaderValue[]` | - |
 | loading | 开启骨架屏 | `boolean` | `false` |
+| optionRender | 自定义选项的渲染函数 | `(option: CascaderOption, info: { depth: number, active: boolean }) => ReactNode` | - |
 
 关于 `CascaderValue` `CascaderOption[]` `CascaderValueExtend` 的类型定义，请参考 [Cascader](/zh/components/cascader#api) 的文档。
 
