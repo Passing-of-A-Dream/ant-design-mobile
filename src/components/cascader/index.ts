@@ -11,6 +11,7 @@ export type {
   CascaderValueExtend,
   CascaderOption,
   CascaderViewOptionRender,
+  CascaderViewOptionRenderInfo,
 } from '../cascader-view'
 
 export default attachPropertiesToComponent(Cascader, {

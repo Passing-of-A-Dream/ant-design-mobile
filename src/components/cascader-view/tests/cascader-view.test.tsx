@@ -142,7 +142,7 @@ describe('CascaderView', () => {
     const { getByText } = render(
       <CascaderView
         options={options}
-        optionRender={(option, depth) => (
+        optionRender={(option, { depth }) => (
           <span>
             {option.label}-{depth}
           </span>

@@ -30,10 +30,14 @@ export type CascaderValueExtend = {
   isLeaf: boolean
 }
 
+export type CascaderViewOptionRenderInfo = {
+  depth: number
+  active: boolean
+}
+
 export type CascaderViewOptionRender = (
   option: CascaderOption,
-  depth: number,
-  active: boolean
+  info: CascaderViewOptionRenderInfo
 ) => ReactNode
 
 export type CascaderViewProps = {
@@ -196,7 +200,10 @@ export const CascaderView: FC<CascaderViewProps> = p => {
                           })}
                         >
                           {props.optionRender
-                            ? props.optionRender(option, index, active)
+                            ? props.optionRender(option, {
+                                depth: index,
+                                active,
+                              })
                             : option[labelName]}
                         </CheckList.Item>
                       )
