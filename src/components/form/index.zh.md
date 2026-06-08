@@ -17,6 +17,12 @@
 
 <code src="./demos/demo2.tsx"></code>
 
+### 静默校验
+
+通过 `validateFields` 的 `validateOnly` 参数，可以只校验而不展示错误 UI，常用于动态控制提交按钮的禁用状态。
+
+<code src="./demos/demo-validate-only.tsx"></code>
+
 <code src="./demos/demo6.tsx" debug></code>
 
 ### getvalueprops-normalize
@@ -61,7 +67,7 @@
 | setFieldValue | 设置对应字段名的值 | `(name: NamePath, value: any) => void` |
 | setFieldsValue | 设置表单的值（该值将直接传入 form store 中。如果你不希望传入对象被修改，请克隆后传入） | `(values) => void` |
 | submit | 提交表单，与点击 `submit` 按钮效果相同 | `() => void` |
-| validateFields | 触发表单验证 | `(nameList?: NamePath[]) => Promise` |
+| validateFields | 触发表单验证，设置 `validateOnly` 为 `true` 时只校验不更新 UI | `(nameList?: NamePath[], options?: ValidateOptions) => Promise` & `(options?: ValidateOptions) => Promise` |
 
 ### validateMessages
 
@@ -297,6 +303,14 @@ Form.Array 渲染表单相关操作函数。
 ### NamePath
 
 `string | number | (string | number)[]`
+
+### ValidateOptions
+
+| 属性 | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- |
+| validateOnly | 只校验，不更新字段 UI 状态（如错误信息显示） | `boolean` | `false` |
+| recursive | 递归校验，校验所有包含指定 namePath 的字段 | `boolean` | `false` |
+| dirty | 仅校验被修改过的字段 | `boolean` | `false` |
 
 ### FieldData
 

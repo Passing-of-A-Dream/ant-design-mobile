@@ -17,6 +17,12 @@ High-performance form controls with built-in data field management. Including da
 
 <code src="./demos/demo2.tsx"></code>
 
+### Validate Only
+
+You can use `validateOnly` of `validateFields` to validate the form without showing error UI. This is commonly used to dynamically control the disabled state of the submit button.
+
+<code src="./demos/demo-validate-only.tsx"></code>
+
 <code src="./demos/demo6.tsx" debug></code>
 
 ### getvalueprops-normalize
@@ -61,7 +67,7 @@ High-performance form controls with built-in data field management. Including da
 | setFieldValue | Set the value by the field name | `(name: NamePath, value: any) => void` |
 | setFieldsValue | Set fields value(Will directly pass to form store. If you do not want to modify passed object, please clone first) | `(values) => void` |
 | submit | Submit the form. It's same as click `submit` button | `() => void` |
-| validateFields | Validate fields | `(nameList?: NamePath[]) => Promise` |
+| validateFields | Validate fields. Set `validateOnly` to `true` to validate without updating UI | `(nameList?: NamePath[], options?: ValidateOptions) => Promise` & `(options?: ValidateOptions) => Promise` |
 
 ### validateMessages
 
@@ -295,6 +301,14 @@ The operation functions for Form.Array.
 ### NamePath
 
 `string | number | (string | number)[]`
+
+### ValidateOptions
+
+| Name | Description | Type | Default |
+| --- | --- | --- | --- |
+| validateOnly | Validate only, without updating field UI state (e.g. error message display) | `boolean` | `false` |
+| recursive | Recursive validate, validate all fields that contain the specified namePath | `boolean` | `false` |
+| dirty | Only validate fields that have been modified | `boolean` | `false` |
 
 ### FieldData
 
