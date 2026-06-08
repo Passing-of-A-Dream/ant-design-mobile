@@ -279,16 +279,24 @@ describe('Form', () => {
       const values = Form.useWatch([], form)
 
       React.useEffect(() => {
+        let isCurrent = true
         form
           .validateFields({ validateOnly: true })
           .then(() => {
-            setSubmittable(true)
-            onValidate(true)
+            if (isCurrent) {
+              setSubmittable(true)
+              onValidate(true)
+            }
           })
           .catch(() => {
-            setSubmittable(false)
-            onValidate(false)
+            if (isCurrent) {
+              setSubmittable(false)
+              onValidate(false)
+            }
           })
+        return () => {
+          isCurrent = false
+        }
       }, [form, values])
 
       return (

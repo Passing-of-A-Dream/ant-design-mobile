@@ -10,14 +10,22 @@ export default () => {
   const [submittable, setSubmittable] = React.useState(false)
 
   React.useEffect(() => {
+    let isCurrent = true
     form
       .validateFields({ validateOnly: true })
       .then(() => {
-        setSubmittable(true)
+        if (isCurrent) {
+          setSubmittable(true)
+        }
       })
       .catch(() => {
-        setSubmittable(false)
+        if (isCurrent) {
+          setSubmittable(false)
+        }
       })
+    return () => {
+      isCurrent = false
+    }
   }, [form, values])
 
   return (
