@@ -13,6 +13,7 @@ export type { FormItemProps } from './form-item'
 export type { FormSubscribeProps } from './form-subscribe'
 export type {
   ValidateMessages,
+  ValidateOptions,
   FieldData,
   NamePath,
   Rule,
