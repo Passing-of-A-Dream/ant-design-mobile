@@ -124,8 +124,8 @@ describe('NoticeBar', () => {
     const closeIcon = container.querySelectorAll(`.${classPrefix}-close`)[0]
     fireEvent.click(closeIcon)
 
-    expect(handleClose).toBeCalledTimes(1)
-    expect(handleClick).not.toBeCalled()
+    expect(handleClose).toHaveBeenCalledTimes(1)
+    expect(handleClick).not.toHaveBeenCalled()
   })
 
   describe('closeIcon', () => {
