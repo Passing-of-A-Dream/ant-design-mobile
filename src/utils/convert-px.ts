@@ -1,11 +1,13 @@
 import { canUseDom } from './can-use-dom'
-import { isDev } from './is-dev'
 import { devError } from './dev-log'
+import { isDev } from './is-dev'
 
 let tenPxTester: HTMLDivElement | null = null
 let tester: HTMLDivElement | null = null
 
-if (canUseDom) {
+function initialize() {
+  if (tenPxTester !== null) return
+  if (!canUseDom || !document.body) return
   tenPxTester = document.createElement('div')
   tenPxTester.className = 'adm-px-tester'
   tenPxTester.style.setProperty('--size', '10')
@@ -24,6 +26,9 @@ if (canUseDom) {
 }
 
 export function convertPx(px: number) {
+  if (tenPxTester === null) {
+    initialize()
+  }
   if (tenPxTester === null || tester === null) return px
   if (tenPxTester.getBoundingClientRect().height === 10) {
     return px
