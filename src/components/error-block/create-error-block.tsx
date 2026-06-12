@@ -1,5 +1,6 @@
 import React from 'react'
 import type { FC, ReactNode, ReactElement } from 'react'
+import useId from 'rc-util/lib/hooks/useId'
 import classNames from 'classnames'
 import { mergeProps } from '../../utils/with-default-props'
 import { NativeProps, withNativeProps } from '../../utils/native-props'
@@ -36,10 +37,15 @@ export function createErrorBlock(imageRecord: ImageRecord) {
       'description' in props ? props.description : contentPack.description
     const title = 'title' in props ? props.title : contentPack.title
 
-    const image: ReactNode = props.image ?? imageRecord[props.status]
+    const id = useId()
+    const imageId = `error-block-image-${id}`
+
+    const image = props.image ?? imageRecord[props.status]
     const imageNode =
       typeof image === 'string' ? (
         <img src={image} alt='error block image' />
+      ) : typeof image === 'function' ? (
+        image(imageId)
       ) : (
         image
       )

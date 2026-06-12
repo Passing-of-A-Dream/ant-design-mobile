@@ -1,5 +1,5 @@
 import { createErrorBlock } from './create-error-block'
-import type { ReactElement } from 'react'
+import type { ReactNode } from 'react'
 import {
   busyImage,
   defaultImage,
@@ -9,7 +9,7 @@ import {
 
 const imageRecord: Record<
   'default' | 'disconnected' | 'empty' | 'busy',
-  ReactElement
+  (id: string) => ReactNode
 > = {
   'default': defaultImage,
   'disconnected': disconnectedImage,

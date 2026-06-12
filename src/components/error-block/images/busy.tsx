@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const busyImage = (
+export const busyImage = (id: string) => (
   <svg
     viewBox='0 0 400 400'
     xmlns='http://www.w3.org/2000/svg'
@@ -12,24 +12,19 @@ export const busyImage = (
         y1='-116.862%'
         x2='50%'
         y2='90.764%'
-        id='error-block-image-busy-a'
+        id={`${id}-a`}
       >
         <stop stopColor='#72A7FD' stopOpacity={0.207} offset='0%' />
         <stop stopColor='#72A7FD' stopOpacity={0.115} offset='80.072%' />
         <stop stopColor='#72A7FD' stopOpacity={0} offset='100%' />
       </linearGradient>
-      <circle
-        id='error-block-image-busy-b'
-        cx={34.857}
-        cy={34.857}
-        r={34.857}
-      />
+      <circle id={`${id}-b`} cx={34.857} cy={34.857} r={34.857} />
     </defs>
     <g fill='none' fillRule='evenodd'>
       <path
         d='M157.964 243.667H0L3.806 99.134a4.572 4.572 0 0 1 4.353-4.446l.217-.005h45.588V67.205a4.572 4.572 0 0 1 4.356-4.566l.216-.005 65.498-.001 2.554-58.688a4.571 4.571 0 0 1 4.779-4.368l.214.015 87.79 8.222a4.572 4.572 0 0 1 4.126 4.133l.015.213 3.146 69.652 74.976-17.906a4.571 4.571 0 0 1 5.628 4.23l.005.216v43.955h56.162v130.265l-56.163-.001v.002h-82.383v-.004h-66.919v1.098Zm-68.461-84.631h-9.968v8.435h9.968v-8.435Zm0-14.508h-9.968v8.436h9.968v-8.436Zm197.985-5.149h-9.967v8.432h9.967v-8.432Zm-197.985-8.806h-9.968v8.436h9.968v-8.436Zm197.985-5.153h-9.967v8.432h9.967v-8.432Zm0-14.503h-9.967v8.432h9.967v-8.432Zm-84.643-.777h-30.8v8.436h30.8v-8.436Zm84.643-13.186h-9.967v8.435h9.967v-8.435Zm-84.643-3.29h-30.8v8.435h30.8v-8.435Zm0-15.912h-30.8v8.436h30.8v-8.436Z'
         transform='translate(18.286 51.286)'
-        fill='url(#error-block-image-busy-a)'
+        fill={`url(#${id}-a)`}
       />
       <path
         d='m250.934 176.555-101.963 1.038c-5.276.054-9.51 4.374-9.455 9.65.054 5.274 4.374 9.507 9.649 9.454l.958-.01c-.376 7.363 3.679 59.93 34.894 62.659 4.203.367 7.432.39 7.475 4.609.042 4.218-3.176 4.307-7.37 4.76-34.593 3.737-34.136 56.004-33.61 63.357l-.957.01c-5.276.053-9.51 4.373-9.455 9.649.053 5.275 4.374 9.508 9.649 9.454l101.963-1.039c5.275-.054 9.508-4.374 9.455-9.648-.055-5.276-4.374-9.51-9.65-9.455l-.958.01c.377-7.363-.729-59.672-34.894-62.66-4.202-.367-7.432-.39-7.474-4.608-.043-4.219 3.175-4.308 7.369-4.76 31.276-3.377 34.136-56.004 33.61-63.357l.958-.01c5.276-.053 9.508-4.373 9.455-9.649-.055-5.276-4.374-9.509-9.65-9.454Z'
@@ -67,18 +62,14 @@ export const busyImage = (
         fillRule='nonzero'
       />
       <g transform='translate(236.571 284.571)'>
-        <mask id='error-block-image-busy-c' fill='#fff'>
-          <use xlinkHref='#error-block-image-busy-b' />
+        <mask id={`${id}-c`} fill='#fff'>
+          <use xlinkHref={`#${id}-b`} />
         </mask>
-        <use
-          fill='#FBBE47'
-          fillRule='nonzero'
-          xlinkHref='#error-block-image-busy-b'
-        />
+        <use fill='#FBBE47' fillRule='nonzero' xlinkHref={`#${id}-b`} />
         <circle
           fill='#FFCD6B'
           fillRule='nonzero'
-          mask='url(#error-block-image-busy-c)'
+          mask={`url(#${id}-c)`}
           cx={25.714}
           cy={28}
           r={34.857}
@@ -86,7 +77,7 @@ export const busyImage = (
         <circle
           fill='#FFF'
           fillRule='nonzero'
-          mask='url(#error-block-image-busy-c)'
+          mask={`url(#${id}-c)`}
           cx={22.286}
           cy={18.857}
           r={3.429}
