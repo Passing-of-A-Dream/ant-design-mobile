@@ -1,11 +1,11 @@
-import React from 'react'
-import type { FC, ReactNode, ReactElement } from 'react'
-import useId from 'rc-util/lib/hooks/useId'
 import classNames from 'classnames'
-import { mergeProps } from '../../utils/with-default-props'
-import { NativeProps, withNativeProps } from '../../utils/native-props'
-import { useConfig } from '../config-provider'
+import useId from 'rc-util/lib/hooks/useId'
+import type { FC, ReactElement, ReactNode } from 'react'
+import React from 'react'
 import type { ErrorBlockStatus, ImageRecord } from '.'
+import { NativeProps, withNativeProps } from '../../utils/native-props'
+import { mergeProps } from '../../utils/with-default-props'
+import { useConfig } from '../config-provider'
 import './error-block.less'
 
 const classPrefix = `adm-error-block`
@@ -13,7 +13,7 @@ const classPrefix = `adm-error-block`
 export type ErrorBlockProps = {
   status?: ErrorBlockStatus
   title?: ReactNode
-  image?: string | ReactElement
+  image?: string | ReactElement | ((id: string) => ReactNode)
   description?: ReactNode
   fullPage?: boolean
   children?: ReactNode
