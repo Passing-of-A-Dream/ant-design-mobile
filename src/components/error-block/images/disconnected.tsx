@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const disconnectedImage = (id: string) => (
+export const disconnectedImageFactory = (id: string) => (
   <svg
     viewBox='0 0 400 400'
     xmlns='http://www.w3.org/2000/svg'
@@ -109,4 +109,8 @@ export const disconnectedImage = (id: string) => (
       </g>
     </g>
   </svg>
+)
+
+export const disconnectedImage = disconnectedImageFactory(
+  'adm-error-block-disconnected'
 )

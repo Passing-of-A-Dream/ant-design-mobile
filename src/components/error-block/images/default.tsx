@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const defaultImage = (id: string) => (
+export const defaultImageFactory = (id: string) => (
   <svg
     viewBox='0 0 200 200'
     xmlns='http://www.w3.org/2000/svg'
@@ -167,3 +167,5 @@ export const defaultImage = (id: string) => (
     </g>
   </svg>
 )
+
+export const defaultImage = defaultImageFactory('adm-error-block-default')

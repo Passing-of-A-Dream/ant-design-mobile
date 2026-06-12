@@ -1,4 +1,4 @@
-export { defaultImage } from './default'
-export { disconnectedImage } from './disconnected'
-export { emptyImage } from './empty'
-export { busyImage } from './busy'
+export { busyImage, busyImageFactory } from './busy'
+export { defaultImage, defaultImageFactory } from './default'
+export { disconnectedImage, disconnectedImageFactory } from './disconnected'
+export { emptyImage, emptyImageFactory } from './empty'

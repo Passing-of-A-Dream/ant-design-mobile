@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const emptyImage = (id: string) => (
+export const emptyImageFactory = (id: string) => (
   <svg
     viewBox='0 0 400 400'
     xmlns='http://www.w3.org/2000/svg'
@@ -83,3 +83,5 @@ export const emptyImage = (id: string) => (
     </g>
   </svg>
 )
+
+export const emptyImage = emptyImageFactory('adm-error-block-empty')
