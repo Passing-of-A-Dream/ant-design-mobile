@@ -1,5 +1,6 @@
 import { useClickAway } from 'ahooks'
 import classNames from 'classnames'
+import raf from 'rc-util/lib/raf'
 import type {
   ComponentProps,
   PropsWithChildren,
@@ -16,7 +17,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import raf from 'rc-util/lib/raf'
 import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProp, mergeProps } from '../../utils/with-default-props'
@@ -63,9 +63,6 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       props.arrow,
       props.arrowIcon
     )
-    const prevActiveKeyRef = useRef<string | null>(
-      mergedProps.activeKey ?? mergedProps.defaultActiveKey ?? null
-    )
 
     const [value, setValue] = usePropsValue({
       value: mergedProps.activeKey,
@@ -73,16 +70,12 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       onChange: (v: string | null) => {
         mergedProps.onChange?.(v)
         if (v === null) {
-          mergedProps.onVisibleChange?.(false, prevActiveKeyRef.current)
+          mergedProps.onVisibleChange?.(false, value)
         } else {
           mergedProps.onVisibleChange?.(true, v)
         }
       },
     })
-
-    useEffect(() => {
-      prevActiveKeyRef.current = value
-    }, [value])
 
     const navRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
