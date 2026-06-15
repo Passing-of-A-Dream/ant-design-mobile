@@ -64,14 +64,16 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       props.arrowIcon
     )
 
+    const closingKeyRef = useRef<string | null>(null)
+
     const [value, setValue] = usePropsValue({
       value: mergedProps.activeKey,
       defaultValue: mergedProps.defaultActiveKey,
       onChange: (v: string | null) => {
         mergedProps.onChange?.(v)
         if (v === null) {
-          mergedProps.onVisibleChange?.(false, value)
-        } else {
+          closingKeyRef.current = value
+        } else if (value !== null) {
           mergedProps.onVisibleChange?.(true, v)
         }
       },
@@ -189,6 +191,12 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
                 }
               : undefined
           }
+          afterShow={() => {
+            mergedProps.onVisibleChange?.(true, value)
+          }}
+          afterClose={() => {
+            mergedProps.onVisibleChange?.(false, closingKeyRef.current)
+          }}
         >
           <div ref={contentRef}>
             {items.map(item => {

@@ -164,16 +164,20 @@ describe('Dropdown', () => {
 
       // 打开
       fireEvent.click(screen.getByText('sorter'))
-      expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      })
       expect(onVisibleChange).toHaveBeenCalledTimes(1)
 
       // 再次点击同一项关闭
       fireEvent.click(screen.getByText('sorter'))
-      expect(onVisibleChange).lastCalledWith(false, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(false, 'sorter')
+      })
       expect(onVisibleChange).toHaveBeenCalledTimes(2)
     })
 
-    test('should fire onVisibleChange when switching items', () => {
+    test('should fire onVisibleChange when switching items', async () => {
       const onVisibleChange = jest.fn()
       render(
         <Dropdown onVisibleChange={onVisibleChange}>
@@ -188,15 +192,16 @@ describe('Dropdown', () => {
 
       // 打开 sorter
       fireEvent.click(screen.getByText('sorter'))
-      expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      })
 
-      // 切换到 filter：直接切换，不经过关闭
       fireEvent.click(screen.getByText('filter'))
       expect(onVisibleChange).lastCalledWith(true, 'filter')
       expect(onVisibleChange).toHaveBeenCalledTimes(2)
     })
 
-    test('should fire onVisibleChange when closing via click away', () => {
+    test('should fire onVisibleChange when closing via click away', async () => {
       const onVisibleChange = jest.fn()
       render(
         <Dropdown closeOnClickAway onVisibleChange={onVisibleChange}>
@@ -208,16 +213,20 @@ describe('Dropdown', () => {
 
       // 打开
       fireEvent.click(screen.getByText('sorter'))
-      expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      })
 
       // 点击外部关闭
       act(() => {
         fireEvent.click(document.body)
       })
-      expect(onVisibleChange).lastCalledWith(false, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(false, 'sorter')
+      })
     })
 
-    test('should fire onVisibleChange when closing via ref.close()', () => {
+    test('should fire onVisibleChange when closing via ref.close()', async () => {
       const ref = React.createRef<{ close: () => void }>()
       const onVisibleChange = jest.fn()
       render(
@@ -230,11 +239,15 @@ describe('Dropdown', () => {
 
       // 打开
       fireEvent.click(screen.getByText('sorter'))
-      expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+      })
 
       // 通过 ref 关闭
       ref.current?.close()
-      expect(onVisibleChange).lastCalledWith(false, 'sorter')
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(false, 'sorter')
+      })
     })
   })
 })
