@@ -34,6 +34,7 @@ export type DropdownProps = {
   closeOnMaskClick?: boolean
   closeOnClickAway?: boolean
   onChange?: (key: string | null) => void
+  onVisibleChange?: (visible: boolean, key: string | null) => void
   arrowIcon?: ReactNode
   /**
    * @deprecated use `arrowIcon` instead
@@ -62,11 +63,26 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       props.arrow,
       props.arrowIcon
     )
+    const prevActiveKeyRef = useRef<string | null>(
+      mergedProps.activeKey ?? mergedProps.defaultActiveKey ?? null
+    )
+
     const [value, setValue] = usePropsValue({
       value: mergedProps.activeKey,
       defaultValue: mergedProps.defaultActiveKey,
-      onChange: mergedProps.onChange,
+      onChange: (v: string | null) => {
+        mergedProps.onChange?.(v)
+        if (v === null) {
+          mergedProps.onVisibleChange?.(false, prevActiveKeyRef.current)
+        } else {
+          mergedProps.onVisibleChange?.(true, v)
+        }
+      },
     })
+
+    useEffect(() => {
+      prevActiveKeyRef.current = value
+    }, [value])
 
     const navRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
