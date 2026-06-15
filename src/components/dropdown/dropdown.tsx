@@ -73,8 +73,6 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
         mergedProps.onChange?.(v)
         if (v === null) {
           closingKeyRef.current = value
-        } else if (value !== null) {
-          mergedProps.onVisibleChange?.(true, { key: v })
         }
       },
     })
