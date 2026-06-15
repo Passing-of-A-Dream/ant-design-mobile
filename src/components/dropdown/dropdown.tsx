@@ -34,7 +34,7 @@ export type DropdownProps = {
   closeOnMaskClick?: boolean
   closeOnClickAway?: boolean
   onChange?: (key: string | null) => void
-  onVisibleChange?: (visible: boolean, key: string | null) => void
+  onVisibleChange?: (visible: boolean, info: { key: string | null }) => void
   arrowIcon?: ReactNode
   /**
    * @deprecated use `arrowIcon` instead
@@ -74,7 +74,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
         if (v === null) {
           closingKeyRef.current = value
         } else if (value !== null) {
-          mergedProps.onVisibleChange?.(true, v)
+          mergedProps.onVisibleChange?.(true, { key: v })
         }
       },
     })
@@ -192,10 +192,10 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
               : undefined
           }
           afterShow={() => {
-            mergedProps.onVisibleChange?.(true, value)
+            mergedProps.onVisibleChange?.(true, { key: value })
           }}
           afterClose={() => {
-            mergedProps.onVisibleChange?.(false, closingKeyRef.current)
+            mergedProps.onVisibleChange?.(false, { key: closingKeyRef.current })
           }}
         >
           <div ref={contentRef}>

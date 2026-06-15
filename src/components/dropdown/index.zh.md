@@ -22,7 +22,7 @@
 | closeOnMaskClick | 是否在点击遮罩后自动隐藏 | `boolean` | `true` |
 | defaultActiveKey | 默认激活的 `Item` `key` | `string \| null` | `null` |
 | onChange | `activeKey` 变化时触发 | `(activeKey: string \| null)=> void` | - |
-| onVisibleChange | 面板显示/隐藏时触发 | `(visible: boolean, key: string \| null) => void` | - |
+| onVisibleChange | 面板显示/隐藏时触发 | `(visible: boolean, info: { key: string \| null }) => void` | - |
 | getContainer | 自定义弹窗的父容器 | `HTMLElement \| (() => HTMLElement) \| null` | `document.body` |
 
 ### Ref
