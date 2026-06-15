@@ -165,14 +165,14 @@ describe('Dropdown', () => {
       // 打开
       fireEvent.click(screen.getByText('sorter'))
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
       })
       expect(onVisibleChange).toHaveBeenCalledTimes(1)
 
       // 再次点击同一项关闭
       fireEvent.click(screen.getByText('sorter'))
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(false, 'sorter')
+        expect(onVisibleChange).lastCalledWith(false, { key: 'sorter' })
       })
       expect(onVisibleChange).toHaveBeenCalledTimes(2)
     })
@@ -193,11 +193,11 @@ describe('Dropdown', () => {
       // 打开 sorter
       fireEvent.click(screen.getByText('sorter'))
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
       })
 
       fireEvent.click(screen.getByText('filter'))
-      expect(onVisibleChange).lastCalledWith(true, 'filter')
+      expect(onVisibleChange).lastCalledWith(true, { key: 'filter' })
       expect(onVisibleChange).toHaveBeenCalledTimes(2)
     })
 
@@ -214,7 +214,7 @@ describe('Dropdown', () => {
       // 打开
       fireEvent.click(screen.getByText('sorter'))
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
       })
 
       // 点击外部关闭
@@ -222,7 +222,7 @@ describe('Dropdown', () => {
         fireEvent.click(document.body)
       })
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(false, 'sorter')
+        expect(onVisibleChange).lastCalledWith(false, { key: 'sorter' })
       })
     })
 
@@ -240,13 +240,13 @@ describe('Dropdown', () => {
       // 打开
       fireEvent.click(screen.getByText('sorter'))
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(true, 'sorter')
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
       })
 
       // 通过 ref 关闭
       ref.current?.close()
       await waitFor(() => {
-        expect(onVisibleChange).lastCalledWith(false, 'sorter')
+        expect(onVisibleChange).lastCalledWith(false, { key: 'sorter' })
       })
     })
   })
