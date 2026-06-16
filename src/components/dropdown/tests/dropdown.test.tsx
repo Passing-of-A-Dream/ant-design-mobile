@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { fireEvent, render, screen, waitFor } from 'testing'
+import { act, fireEvent, render, screen, waitFor } from 'testing'
 import Dropdown from '..'
 
 const classPrefix = `adm-dropdown`
@@ -148,6 +148,106 @@ describe('Dropdown', () => {
         </Dropdown>
       )
       expect(screen.getByText('bamboo')).toBeVisible()
+    })
+  })
+
+  describe('onVisibleChange', () => {
+    test('should fire onVisibleChange when opening and closing', async () => {
+      const onVisibleChange = jest.fn()
+      render(
+        <Dropdown onVisibleChange={onVisibleChange}>
+          <Dropdown.Item title='sorter' key='sorter'>
+            content
+          </Dropdown.Item>
+        </Dropdown>
+      )
+
+      // 打开
+      fireEvent.click(screen.getByText('sorter'))
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
+      })
+      expect(onVisibleChange).toHaveBeenCalledTimes(1)
+
+      // 再次点击同一项关闭
+      fireEvent.click(screen.getByText('sorter'))
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(false, { key: 'sorter' })
+      })
+      expect(onVisibleChange).toHaveBeenCalledTimes(2)
+    })
+
+    test('should fire onVisibleChange when switching items', async () => {
+      const onVisibleChange = jest.fn()
+      render(
+        <Dropdown onVisibleChange={onVisibleChange}>
+          <Dropdown.Item title='sorter' key='sorter'>
+            sorter content
+          </Dropdown.Item>
+          <Dropdown.Item title='filter' key='filter'>
+            filter content
+          </Dropdown.Item>
+        </Dropdown>
+      )
+
+      // 打开 sorter
+      fireEvent.click(screen.getByText('sorter'))
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
+      })
+
+      // 切换 item 不会改变 visible，不应触发 onVisibleChange
+      fireEvent.click(screen.getByText('filter'))
+      expect(onVisibleChange).toHaveBeenCalledTimes(1)
+    })
+
+    test('should fire onVisibleChange when closing via click away', async () => {
+      const onVisibleChange = jest.fn()
+      render(
+        <Dropdown closeOnClickAway onVisibleChange={onVisibleChange}>
+          <Dropdown.Item title='sorter' key='sorter'>
+            content
+          </Dropdown.Item>
+        </Dropdown>
+      )
+
+      // 打开
+      fireEvent.click(screen.getByText('sorter'))
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
+      })
+
+      // 点击外部关闭
+      act(() => {
+        fireEvent.click(document.body)
+      })
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(false, { key: 'sorter' })
+      })
+    })
+
+    test('should fire onVisibleChange when closing via ref.close()', async () => {
+      const ref = React.createRef<{ close: () => void }>()
+      const onVisibleChange = jest.fn()
+      render(
+        <Dropdown ref={ref} onVisibleChange={onVisibleChange}>
+          <Dropdown.Item title='sorter' key='sorter'>
+            content
+          </Dropdown.Item>
+        </Dropdown>
+      )
+
+      // 打开
+      fireEvent.click(screen.getByText('sorter'))
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
+      })
+
+      // 通过 ref 关闭
+      ref.current?.close()
+      await waitFor(() => {
+        expect(onVisibleChange).lastCalledWith(false, { key: 'sorter' })
+      })
     })
   })
 })

@@ -1,5 +1,6 @@
 import { useClickAway } from 'ahooks'
 import classNames from 'classnames'
+import raf from 'rc-util/lib/raf'
 import type {
   ComponentProps,
   PropsWithChildren,
@@ -16,7 +17,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import raf from 'rc-util/lib/raf'
 import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProp, mergeProps } from '../../utils/with-default-props'
@@ -34,6 +34,7 @@ export type DropdownProps = {
   closeOnMaskClick?: boolean
   closeOnClickAway?: boolean
   onChange?: (key: string | null) => void
+  onVisibleChange?: (visible: boolean, info: { key: string | null }) => void
   arrowIcon?: ReactNode
   /**
    * @deprecated use `arrowIcon` instead
@@ -62,11 +63,15 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       props.arrow,
       props.arrowIcon
     )
+
     const [value, setValue] = usePropsValue({
       value: mergedProps.activeKey,
       defaultValue: mergedProps.defaultActiveKey,
       onChange: mergedProps.onChange,
     })
+
+    const cacheKeyRef = useRef<string | null>(null)
+    cacheKeyRef.current = value ?? cacheKeyRef.current
 
     const navRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
@@ -180,6 +185,12 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
                 }
               : undefined
           }
+          afterShow={() => {
+            mergedProps.onVisibleChange?.(true, { key: cacheKeyRef.current })
+          }}
+          afterClose={() => {
+            mergedProps.onVisibleChange?.(false, { key: cacheKeyRef.current })
+          }}
         >
           <div ref={contentRef}>
             {items.map(item => {
