@@ -168,7 +168,7 @@ describe('PickerView', () => {
     }
 
     render(<App />)
-    await actSleep(100)
+    await actSleep(1200)
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(['Mon', 'am'], expect.anything())
   })
