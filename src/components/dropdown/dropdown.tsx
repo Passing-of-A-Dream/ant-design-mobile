@@ -64,18 +64,18 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       props.arrowIcon
     )
 
-    const closingKeyRef = useRef<string | null>(null)
-
     const [value, setValue] = usePropsValue({
       value: mergedProps.activeKey,
       defaultValue: mergedProps.defaultActiveKey,
-      onChange: (v: string | null) => {
-        mergedProps.onChange?.(v)
-        if (v === null) {
-          closingKeyRef.current = value
-        }
-      },
+      onChange: mergedProps.onChange,
     })
+
+    const cacheKeyRef = useRef<string | null>(null)
+    useEffect(() => {
+      if (value !== null) {
+        cacheKeyRef.current = value
+      }
+    }, [value])
 
     const navRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
@@ -190,10 +190,10 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
               : undefined
           }
           afterShow={() => {
-            mergedProps.onVisibleChange?.(true, { key: value })
+            mergedProps.onVisibleChange?.(true, { key: cacheKeyRef.current })
           }}
           afterClose={() => {
-            mergedProps.onVisibleChange?.(false, { key: closingKeyRef.current })
+            mergedProps.onVisibleChange?.(false, { key: cacheKeyRef.current })
           }}
         >
           <div ref={contentRef}>

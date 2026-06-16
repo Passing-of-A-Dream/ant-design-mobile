@@ -196,9 +196,9 @@ describe('Dropdown', () => {
         expect(onVisibleChange).lastCalledWith(true, { key: 'sorter' })
       })
 
+      // 切换 item 不会改变 visible，不应触发 onVisibleChange
       fireEvent.click(screen.getByText('filter'))
-      expect(onVisibleChange).lastCalledWith(true, { key: 'filter' })
-      expect(onVisibleChange).toHaveBeenCalledTimes(2)
+      expect(onVisibleChange).toHaveBeenCalledTimes(1)
     })
 
     test('should fire onVisibleChange when closing via click away', async () => {
