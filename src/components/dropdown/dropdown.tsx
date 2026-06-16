@@ -71,9 +71,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
     })
 
     const cacheKeyRef = useRef<string | null>(null)
-    if (value !== null) {
-      cacheKeyRef.current = value
-    }
+    cacheKeyRef.current = value ?? cacheKeyRef.current
 
     const navRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
