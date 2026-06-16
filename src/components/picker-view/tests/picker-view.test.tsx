@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import {
-  render,
-  testA11y,
-  fireEvent,
-  waitFor,
-  actSleep,
-  screen,
   act,
+  actSleep,
+  fireEvent,
+  render,
+  screen,
+  testA11y,
+  waitFor,
 } from 'testing'
+import type { PickerValue } from '../'
 import PickerView from '../'
 import { basicColumns } from '../demos/columns-data'
 
@@ -108,5 +109,67 @@ describe('PickerView', () => {
     expect(itemList[2]).toHaveClass(`${classPrefix}-column-item-active`)
     fireEvent.click(screen.getByText('change'))
     await waitFor(() => expect(wheelEl).toHaveStyle('transform: none'))
+  })
+
+  test('should handle string/number type mismatch in value', async () => {
+    const numericColumns = [
+      [
+        { label: '2022', value: 2022 },
+        { label: '2023', value: 2023 },
+        { label: '2024', value: 2024 },
+      ],
+    ]
+
+    const onChange = jest.fn()
+
+    function App() {
+      const [value, setValue] = useState<PickerValue[]>(['2024'])
+      return (
+        <>
+          <PickerView
+            columns={numericColumns}
+            value={value}
+            onChange={val => {
+              onChange(val)
+              setValue(val)
+            }}
+          />
+          <div data-testid='res'>{JSON.stringify(value)}</div>
+        </>
+      )
+    }
+
+    render(<App />)
+
+    await actSleep(50)
+    expect(onChange).not.toHaveBeenCalled()
+
+    const wheelEl = document.body.querySelectorAll(
+      `.${classPrefix}-column-wheel`
+    )[0]
+    fireEvent.mouseDown(wheelEl, { buttons: 1 })
+    fireEvent.mouseMove(wheelEl, { clientY: 200, buttons: 1 })
+    fireEvent.mouseUp(wheelEl)
+    await actSleep(100)
+
+    expect(onChange).toHaveBeenCalled()
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(lastCall).toEqual([2022])
+  })
+
+  test('should not loop when controlled value is not in columns', async () => {
+    const onChange = jest.fn()
+
+    function App() {
+      const [value] = useState<PickerValue[]>(['Invalid'])
+      return (
+        <PickerView columns={basicColumns} value={value} onChange={onChange} />
+      )
+    }
+
+    render(<App />)
+    await actSleep(100)
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith(['Mon', 'am'], expect.anything())
   })
 })

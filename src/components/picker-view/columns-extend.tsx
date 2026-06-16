@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
+import { withCache } from '../../utils/with-cache'
 import type {
-  PickerViewProps,
   PickerValue,
   PickerValueExtend,
+  PickerViewProps,
 } from './picker-view'
-import { withCache } from '../../utils/with-cache'
 
 export function generateColumnsExtend(
   rawColumns: PickerViewProps['columns'],
@@ -27,7 +27,12 @@ export function generateColumnsExtend(
     return val.map((v, index) => {
       const column = columns()[index]
       if (!column) return null
-      return column.find(item => String(item.value) === String(v)) ?? null
+      return (
+        column.find(
+          item =>
+            item.value === v || (v != null && String(item.value) === String(v))
+        ) ?? null
+      )
     })
   })
   const extend: PickerValueExtend = {

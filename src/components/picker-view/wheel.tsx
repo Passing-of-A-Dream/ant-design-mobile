@@ -1,20 +1,20 @@
-import React, { memo, useRef } from 'react'
-import type { ReactNode } from 'react'
-import { useSpring, animated } from '@react-spring/web'
+import { animated, useSpring } from '@react-spring/web'
 import {
   EventTypes,
   FullGestureState,
   useDrag,
   useWheel,
 } from '@use-gesture/react'
-import { rubberbandIfOutOfBounds } from '../../utils/rubberband'
-import { bound } from '../../utils/bound'
-import { PickerColumnItem, PickerValue } from './index'
-import isEqual from 'react-fast-compare'
 import { useIsomorphicLayoutEffect } from 'ahooks'
-import { measureCSSLength } from '../../utils/measure-css-length'
-import { supportsPassive } from '../../utils/supports-passive'
 import classNames from 'classnames'
+import type { ReactNode } from 'react'
+import React, { memo, useRef } from 'react'
+import isEqual from 'react-fast-compare'
+import { bound } from '../../utils/bound'
+import { measureCSSLength } from '../../utils/measure-css-length'
+import { rubberbandIfOutOfBounds } from '../../utils/rubberband'
+import { supportsPassive } from '../../utils/supports-passive'
+import { PickerColumnItem, PickerValue } from './index'
 
 const classPrefix = `adm-picker-view`
 
@@ -61,7 +61,9 @@ export const Wheel = memo<Props>(
       if (draggingRef.current) return
       if (value === null) return
       const targetIndex = column.findIndex(
-        item => String(item.value) === String(value)
+        item =>
+          item.value === value ||
+          (value != null && String(item.value) === String(value))
       )
       if (targetIndex < 0) return
       const finalPosition = targetIndex * -itemHeight.current
@@ -74,7 +76,13 @@ export const Wheel = memo<Props>(
           onSelect(null)
         }
       } else {
-        if (!column.some(item => String(item.value) === String(value))) {
+        if (
+          !column.some(
+            item =>
+              item.value === value ||
+              (value != null && String(item.value) === String(value))
+          )
+        ) {
           const firstItem = column[0]
           onSelect(firstItem.value)
         }

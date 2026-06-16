@@ -6,7 +6,7 @@ import { mergeProps } from '../../utils/with-default-props'
 import { PickerProps } from '../picker'
 import { defaultRenderLabel } from '../picker/picker-utils'
 import SpinLoading from '../spin-loading'
-import { useColumnsExtend } from './columns-extend'
+import { generateColumnsExtend, useColumnsExtend } from './columns-extend'
 import { Wheel } from './wheel'
 
 const classPrefix = `adm-picker-view`
@@ -59,10 +59,14 @@ export const PickerView = memo<PickerViewProps>(p => {
   const columns = extend.columns
 
   function isValueValid(value: PickerValue[]) {
-    if (value.length !== columns.length) return false
+    const valueColumns = generateColumnsExtend(props.columns, value).columns
+    if (value.length !== valueColumns.length) return false
     return value.every((v, i) => {
-      const col = columns[i]
-      return col.some(item => String(item.value) === String(v))
+      const col = valueColumns[i]
+      return col.some(
+        item =>
+          item.value === v || (v != null && String(item.value) === String(v))
+      )
     })
   }
 
