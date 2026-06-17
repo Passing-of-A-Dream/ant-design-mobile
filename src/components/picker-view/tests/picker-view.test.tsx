@@ -129,8 +129,8 @@ describe('PickerView', () => {
           <PickerView
             columns={numericColumns}
             value={value}
-            onChange={val => {
-              onChange(val)
+            onChange={(val, extend) => {
+              onChange(val, extend)
               setValue(val)
             }}
           />
@@ -142,19 +142,8 @@ describe('PickerView', () => {
     render(<App />)
 
     await actSleep(50)
-    expect(onChange).not.toHaveBeenCalled()
-
-    const wheelEl = document.body.querySelectorAll(
-      `.${classPrefix}-column-wheel`
-    )[0]
-    fireEvent.mouseDown(wheelEl, { buttons: 1 })
-    fireEvent.mouseMove(wheelEl, { clientY: 200, buttons: 1 })
-    fireEvent.mouseUp(wheelEl)
-    await actSleep(100)
-
-    expect(onChange).toHaveBeenCalled()
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0]
-    expect(lastCall).toEqual([2022])
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith([2022], expect.anything())
   })
 
   test('should not loop when controlled value is not in columns', async () => {

@@ -63,10 +63,7 @@ export const PickerView = memo<PickerViewProps>(p => {
     if (value.length !== valueColumns.length) return false
     return value.every((v, i) => {
       const col = valueColumns[i]
-      return col.some(
-        item =>
-          item.value === v || (v != null && String(item.value) === String(v))
-      )
+      return col.some(item => item.value === v)
     })
   }
 

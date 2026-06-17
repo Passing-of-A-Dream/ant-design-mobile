@@ -60,11 +60,7 @@ export const Wheel = memo<Props>(
     useIsomorphicLayoutEffect(() => {
       if (draggingRef.current) return
       if (value === null) return
-      const targetIndex = column.findIndex(
-        item =>
-          item.value === value ||
-          (value != null && String(item.value) === String(value))
-      )
+      const targetIndex = column.findIndex(item => item.value === value)
       if (targetIndex < 0) return
       const finalPosition = targetIndex * -itemHeight.current
       api.start({ y: finalPosition, immediate: y.goal !== finalPosition })
@@ -76,13 +72,7 @@ export const Wheel = memo<Props>(
           onSelect(null)
         }
       } else {
-        if (
-          !column.some(
-            item =>
-              item.value === value ||
-              (value != null && String(item.value) === String(value))
-          )
-        ) {
+        if (!column.some(item => item.value === value)) {
           const firstItem = column[0]
           onSelect(firstItem.value)
         }

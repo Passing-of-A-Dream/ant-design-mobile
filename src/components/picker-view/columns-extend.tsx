@@ -27,12 +27,7 @@ export function generateColumnsExtend(
     return val.map((v, index) => {
       const column = columns()[index]
       if (!column) return null
-      return (
-        column.find(
-          item =>
-            item.value === v || (v != null && String(item.value) === String(v))
-        ) ?? null
-      )
+      return column.find(item => item.value === v) ?? null
     })
   })
   const extend: PickerValueExtend = {
