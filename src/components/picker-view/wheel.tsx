@@ -1,20 +1,20 @@
-import { animated, useSpring } from '@react-spring/web'
+import React, { memo, useRef } from 'react'
+import type { ReactNode } from 'react'
+import { useSpring, animated } from '@react-spring/web'
 import {
   EventTypes,
   FullGestureState,
   useDrag,
   useWheel,
 } from '@use-gesture/react'
-import { useIsomorphicLayoutEffect } from 'ahooks'
-import classNames from 'classnames'
-import type { ReactNode } from 'react'
-import React, { memo, useRef } from 'react'
-import isEqual from 'react-fast-compare'
-import { bound } from '../../utils/bound'
-import { measureCSSLength } from '../../utils/measure-css-length'
 import { rubberbandIfOutOfBounds } from '../../utils/rubberband'
-import { supportsPassive } from '../../utils/supports-passive'
+import { bound } from '../../utils/bound'
 import { PickerColumnItem, PickerValue } from './index'
+import isEqual from 'react-fast-compare'
+import { useIsomorphicLayoutEffect } from 'ahooks'
+import { measureCSSLength } from '../../utils/measure-css-length'
+import { supportsPassive } from '../../utils/supports-passive'
+import classNames from 'classnames'
 
 const classPrefix = `adm-picker-view`
 
