@@ -277,10 +277,21 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
 
         setCurrent(targetIndex)
 
-        api.start({
-          position: (loop ? roundedIndex : boundIndex(roundedIndex)) * 100,
-          immediate,
-        })
+        if (loop) {
+          const current = position.get()
+          const totalWidth = 100 * mergedTotal
+          let delta = modulus(roundedIndex * 100 - current, totalWidth)
+          if (delta > totalWidth / 2) delta -= totalWidth
+          api.start({
+            position: current + delta,
+            immediate,
+          })
+        } else {
+          api.start({
+            position: boundIndex(roundedIndex) * 100,
+            immediate,
+          })
+        }
       }
 
       function swipeNext(source: SwiperIndexChangeSource = 'swipe') {
