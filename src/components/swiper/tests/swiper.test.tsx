@@ -2,6 +2,7 @@ import { act } from '@testing-library/react'
 import React, { useRef, useState } from 'react'
 import { fireEvent, mockDrag, render, screen, testA11y } from 'testing'
 import Swiper, { SwiperRef } from '..'
+import { getSwipeToPosition } from '../swiper'
 
 const classPrefix = `adm-swiper`
 
@@ -517,45 +518,29 @@ describe('Swiper', () => {
   })
 
   // Pure-function tests for the shortest-path algorithm in swipeTo loop mode.
-  function modulus(value: number, division: number) {
-    const remainder = value % division
-    return remainder < 0 ? remainder + division : remainder
-  }
-
-  function shortestPathTarget(
-    current: number,
-    targetIndex: number,
-    total: number
-  ) {
-    const totalWidth = 100 * total
-    let delta = modulus(targetIndex * 100 - current, totalWidth)
-    if (delta > totalWidth / 2) delta -= totalWidth
-    return current + delta
-  }
-
   describe('swipeTo shortest path logic', () => {
     test('slide 0 → slide 2: backward 100 (position=-100)', () => {
-      expect(shortestPathTarget(0, 2, 3)).toBe(-100)
+      expect(getSwipeToPosition(0, 2, 3)).toBe(-100)
     })
     test('slide 2 → slide 0: forward 100 (position=300)', () => {
-      expect(shortestPathTarget(200, 0, 3)).toBe(300)
+      expect(getSwipeToPosition(200, 0, 3)).toBe(300)
     })
     test('slide 0 → slide 1: forward 100', () => {
-      expect(shortestPathTarget(0, 1, 3)).toBe(100)
+      expect(getSwipeToPosition(0, 1, 3)).toBe(100)
     })
     test('slide 1 → slide 0: backward 100', () => {
-      expect(shortestPathTarget(100, 0, 3)).toBe(0)
+      expect(getSwipeToPosition(100, 0, 3)).toBe(0)
     })
     test('swipeTo(-1) from position 0: backward to -100', () => {
-      expect(shortestPathTarget(0, -1, 3)).toBe(-100)
+      expect(getSwipeToPosition(0, -1, 3)).toBe(-100)
     })
     test('after onRest normalizes to 200, swipeTo(0): forward to 300', () => {
-      expect(shortestPathTarget(200, 0, 3)).toBe(300)
+      expect(getSwipeToPosition(200, 0, 3)).toBe(300)
     })
     test('even slides: delta exactly half → forward (tiebreak)', () => {
       // 2 slides, totalWidth=200, half=100
       // from position 0, targetIndex 1: delta = modulus(100, 200) = 100, not > 100
-      expect(shortestPathTarget(0, 1, 2)).toBe(100)
+      expect(getSwipeToPosition(0, 1, 2)).toBe(100)
     })
   })
 

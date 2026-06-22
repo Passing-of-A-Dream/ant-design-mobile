@@ -278,12 +278,12 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
         setCurrent(targetIndex)
 
         if (loop) {
-          const current = position.get()
-          const totalWidth = 100 * mergedTotal
-          let delta = modulus(roundedIndex * 100 - current, totalWidth)
-          if (delta > totalWidth / 2) delta -= totalWidth
           api.start({
-            position: current + delta,
+            position: getSwipeToPosition(
+              position.get(),
+              roundedIndex,
+              mergedTotal,
+            ),
             immediate,
           })
         } else {
@@ -503,7 +503,18 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
   })
 )
 
-function modulus(value: number, division: number) {
+export function modulus(value: number, division: number) {
   const remainder = value % division
   return remainder < 0 ? remainder + division : remainder
+}
+
+export function getSwipeToPosition(
+  current: number,
+  targetIndex: number,
+  total: number,
+) {
+  const totalWidth = 100 * total
+  let delta = modulus(targetIndex * 100 - current, totalWidth)
+  if (delta > totalWidth / 2) delta -= totalWidth
+  return current + delta
 }
