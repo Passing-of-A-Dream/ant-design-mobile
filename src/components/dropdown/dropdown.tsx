@@ -30,8 +30,28 @@ import Item, { ItemChildrenWrap } from './item'
 // 按滚动容器维护锁计数，防止多 Dropdown 共享同一容器时提前解锁
 const scrollLockState = new WeakMap<
   HTMLElement,
-  { count: number; originalOverflow: string }
+  { count: number; originalOverflowY: string }
 >()
+
+/**
+ * 获取要锁定的滚动容器。
+ */
+function getLockTarget(
+  el: HTMLElement
+): HTMLElement | Window | null | undefined {
+  let node: Element | null = el
+  while (node && node !== document.body && node !== document.documentElement) {
+    if (scrollLockState.has(node as HTMLElement)) {
+      return node as HTMLElement
+    }
+    node = node.parentElement
+  }
+  const parent = getScrollParent(el)
+  if (parent && parent !== window && !(parent instanceof HTMLElement)) {
+    return null
+  }
+  return parent as HTMLElement | Window | null | undefined
+}
 
 const classPrefix = `adm-dropdown`
 
@@ -115,7 +135,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
       let scrollParent: HTMLElement | null = null
 
       if (container) {
-        const parent = getScrollParent(container)
+        const parent = getLockTarget(container)
         if (
           parent &&
           parent !== window &&
@@ -129,9 +149,9 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
           } else {
             scrollLockState.set(scrollParent, {
               count: 1,
-              originalOverflow: scrollParent.style.overflow,
+              originalOverflowY: scrollParent.style.overflowY,
             })
-            scrollParent.style.overflow = 'hidden'
+            scrollParent.style.overflowY = 'hidden'
           }
         }
       }
@@ -150,7 +170,7 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
           if (state) {
             state.count -= 1
             if (state.count === 0) {
-              scrollParent.style.overflow = state.originalOverflow
+              scrollParent.style.overflowY = state.originalOverflowY
               scrollLockState.delete(scrollParent)
             }
           }

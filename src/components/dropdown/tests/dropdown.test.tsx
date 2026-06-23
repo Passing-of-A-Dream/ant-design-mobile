@@ -163,7 +163,7 @@ describe('Dropdown', () => {
 
   test('should lock scroll of nested scrollable container when open', async () => {
     const scrollParentEl = document.createElement('div')
-    scrollParentEl.style.overflow = 'auto'
+    scrollParentEl.style.overflowY = 'auto'
     mockedGetScrollParent.mockReturnValue(scrollParentEl)
 
     render(
@@ -174,21 +174,21 @@ describe('Dropdown', () => {
       </Dropdown>
     )
 
-    expect(scrollParentEl.style.overflow).toBe('auto')
+    expect(scrollParentEl.style.overflowY).toBe('auto')
 
     fireEvent.click(screen.getByText('sorter'))
     await waitFor(() => {
       expect(screen.getByText('content')).toBeVisible()
     })
 
-    expect(scrollParentEl.style.overflow).toBe('hidden')
+    expect(scrollParentEl.style.overflowY).toBe('hidden')
 
     fireEvent.click(screen.getByText('sorter'))
     await waitFor(() => {
       expect(screen.getByText('content')).not.toBeVisible()
     })
 
-    expect(scrollParentEl.style.overflow).toBe('auto')
+    expect(scrollParentEl.style.overflowY).toBe('auto')
 
     mockedGetScrollParent.mockRestore()
   })
@@ -218,62 +218,65 @@ describe('Dropdown', () => {
 
   test('should not prematurely unlock when multiple Dropdowns share the same scroll parent', async () => {
     const scrollParentEl = document.createElement('div')
-    scrollParentEl.style.overflow = 'auto'
+    scrollParentEl.style.overflowY = 'auto'
 
-    const dropdown1 = document.createElement('div')
-    const dropdown2 = document.createElement('div')
+    mockedGetScrollParent.mockImplementation(() => {
+      if (scrollParentEl.style.overflowY === 'hidden') {
+        return window
+      }
+      return scrollParentEl
+    })
+
+    const container = document.createElement('div')
+    scrollParentEl.appendChild(container)
     document.body.appendChild(scrollParentEl)
-    scrollParentEl.appendChild(dropdown1)
-    scrollParentEl.appendChild(dropdown2)
-
-    mockedGetScrollParent.mockReturnValue(scrollParentEl)
 
     const { unmount } = render(
-      <>
-        <Dropdown>
-          <Dropdown.Item title='A' key='a'>
-            a-content
-          </Dropdown.Item>
-        </Dropdown>
-        <Dropdown>
-          <Dropdown.Item title='B' key='b'>
-            b-content
-          </Dropdown.Item>
-        </Dropdown>
-      </>
+      <Dropdown>
+        <Dropdown.Item title='A' key='a'>
+          a-content
+        </Dropdown.Item>
+      </Dropdown>,
+      { container }
     )
 
-    // 打开第一个 Dropdown
     fireEvent.click(screen.getByText('A'))
     await waitFor(() => {
       expect(screen.getByText('a-content')).toBeVisible()
     })
-    expect(scrollParentEl.style.overflow).toBe('hidden')
+    expect(scrollParentEl.style.overflowY).toBe('hidden')
 
-    // 打开第二个 Dropdown（共享同一 scroll parent）
+    const container2 = document.createElement('div')
+    scrollParentEl.appendChild(container2)
+    const { unmount: unmount2 } = render(
+      <Dropdown>
+        <Dropdown.Item title='B' key='b'>
+          b-content
+        </Dropdown.Item>
+      </Dropdown>,
+      { container: container2 }
+    )
+
     fireEvent.click(screen.getByText('B'))
     await waitFor(() => {
       expect(screen.getByText('b-content')).toBeVisible()
     })
-    // 仍为 hidden（引用计数 = 2）
-    expect(scrollParentEl.style.overflow).toBe('hidden')
+    expect(scrollParentEl.style.overflowY).toBe('hidden')
 
-    // 关闭第一个 Dropdown，不应提前解锁
     fireEvent.click(screen.getByText('A'))
     await waitFor(() => {
       expect(screen.getByText('a-content')).not.toBeVisible()
     })
-    // 仍为 hidden（引用计数 = 1）
-    expect(scrollParentEl.style.overflow).toBe('hidden')
+    expect(scrollParentEl.style.overflowY).toBe('hidden')
 
-    // 关闭第二个 Dropdown，计数归零，恢复原始 overflow
     fireEvent.click(screen.getByText('B'))
     await waitFor(() => {
       expect(screen.getByText('b-content')).not.toBeVisible()
     })
-    expect(scrollParentEl.style.overflow).toBe('auto')
+    expect(scrollParentEl.style.overflowY).toBe('auto')
 
     unmount()
+    unmount2()
     document.body.removeChild(scrollParentEl)
     mockedGetScrollParent.mockRestore()
   })
