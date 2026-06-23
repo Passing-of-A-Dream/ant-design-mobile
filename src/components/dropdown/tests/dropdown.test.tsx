@@ -2,6 +2,16 @@ import React, { useState } from 'react'
 import { act, fireEvent, render, screen, waitFor } from 'testing'
 import Dropdown from '..'
 
+jest.mock('../../../utils/get-scroll-parent', () => ({
+  getScrollParent: jest.fn(),
+}))
+
+import { getScrollParent } from '../../../utils/get-scroll-parent'
+
+const mockedGetScrollParent = getScrollParent as jest.MockedFunction<
+  typeof getScrollParent
+>
+
 const classPrefix = `adm-dropdown`
 
 describe('Dropdown', () => {
@@ -149,6 +159,61 @@ describe('Dropdown', () => {
       )
       expect(screen.getByText('bamboo')).toBeVisible()
     })
+  })
+
+  test('should lock scroll of nested scrollable container when open', async () => {
+    const scrollParentEl = document.createElement('div')
+    scrollParentEl.style.overflow = 'auto'
+    mockedGetScrollParent.mockReturnValue(scrollParentEl)
+
+    render(
+      <Dropdown>
+        <Dropdown.Item title='sorter' key='sorter'>
+          content
+        </Dropdown.Item>
+      </Dropdown>
+    )
+
+    expect(scrollParentEl.style.overflow).toBe('auto')
+
+    fireEvent.click(screen.getByText('sorter'))
+    await waitFor(() => {
+      expect(screen.getByText('content')).toBeVisible()
+    })
+
+    expect(scrollParentEl.style.overflow).toBe('hidden')
+
+    fireEvent.click(screen.getByText('sorter'))
+    await waitFor(() => {
+      expect(screen.getByText('content')).not.toBeVisible()
+    })
+
+    expect(scrollParentEl.style.overflow).toBe('auto')
+
+    mockedGetScrollParent.mockRestore()
+  })
+
+  test('should not lock scroll when scroll parent is window', async () => {
+    mockedGetScrollParent.mockReturnValue(window)
+
+    render(
+      <Dropdown>
+        <Dropdown.Item title='sorter' key='sorter'>
+          content
+        </Dropdown.Item>
+      </Dropdown>
+    )
+
+    // 打开 Dropdown
+    fireEvent.click(screen.getByText('sorter'))
+    await waitFor(() => {
+      expect(screen.getByText('content')).toBeVisible()
+    })
+
+    // scroll parent 为 window 时不应设置 overflow
+    expect(document.body.style.overflow).toBe('')
+
+    mockedGetScrollParent.mockRestore()
   })
 
   describe('onVisibleChange', () => {

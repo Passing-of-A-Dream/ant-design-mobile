@@ -17,6 +17,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import { getScrollParent } from '../../utils/get-scroll-parent'
 import { NativeProps, withNativeProps } from '../../utils/native-props'
 import { usePropsValue } from '../../utils/use-props-value'
 import { mergeProp, mergeProps } from '../../utils/with-default-props'
@@ -104,6 +105,24 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
 
       updatePosition()
 
+      const container = containerRef.current
+      let scrollParent: HTMLElement | null = null
+      let originalOverflow = ''
+
+      if (container) {
+        const parent = getScrollParent(container)
+        if (
+          parent &&
+          parent !== window &&
+          parent !== document.body &&
+          parent !== document.documentElement
+        ) {
+          scrollParent = parent as HTMLElement
+          originalOverflow = scrollParent.style.overflow
+          scrollParent.style.overflow = 'hidden'
+        }
+      }
+
       window.addEventListener('scroll', updateTop, {
         passive: true,
         capture: true,
@@ -112,6 +131,10 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
 
       return () => {
         raf.cancel(rafIdRef.current)
+
+        if (scrollParent) {
+          scrollParent.style.overflow = originalOverflow
+        }
 
         window.removeEventListener('scroll', updateTop, true)
         window.removeEventListener('resize', updateTop)
