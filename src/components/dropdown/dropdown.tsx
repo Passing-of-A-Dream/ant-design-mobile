@@ -27,6 +27,12 @@ import { defaultPopupBaseProps } from '../popup/popup-base-props'
 import { IconContext } from './context'
 import Item, { ItemChildrenWrap } from './item'
 
+// 按滚动容器维护锁计数，防止多 Dropdown 共享同一容器时提前解锁
+const scrollLockState = new WeakMap<
+  HTMLElement,
+  { count: number; originalOverflow: string }
+>()
+
 const classPrefix = `adm-dropdown`
 
 export type DropdownProps = {
@@ -107,7 +113,6 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
 
       const container = containerRef.current
       let scrollParent: HTMLElement | null = null
-      let originalOverflow = ''
 
       if (container) {
         const parent = getScrollParent(container)
@@ -118,8 +123,16 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
           parent !== document.documentElement
         ) {
           scrollParent = parent as HTMLElement
-          originalOverflow = scrollParent.style.overflow
-          scrollParent.style.overflow = 'hidden'
+          const state = scrollLockState.get(scrollParent)
+          if (state) {
+            state.count += 1
+          } else {
+            scrollLockState.set(scrollParent, {
+              count: 1,
+              originalOverflow: scrollParent.style.overflow,
+            })
+            scrollParent.style.overflow = 'hidden'
+          }
         }
       }
 
@@ -133,7 +146,14 @@ const Dropdown = forwardRef<DropdownRef, PropsWithChildren<DropdownProps>>(
         raf.cancel(rafIdRef.current)
 
         if (scrollParent) {
-          scrollParent.style.overflow = originalOverflow
+          const state = scrollLockState.get(scrollParent)
+          if (state) {
+            state.count -= 1
+            if (state.count === 0) {
+              scrollParent.style.overflow = state.originalOverflow
+              scrollLockState.delete(scrollParent)
+            }
+          }
         }
 
         window.removeEventListener('scroll', updateTop, true)

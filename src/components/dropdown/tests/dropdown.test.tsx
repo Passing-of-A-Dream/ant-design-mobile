@@ -216,6 +216,68 @@ describe('Dropdown', () => {
     mockedGetScrollParent.mockRestore()
   })
 
+  test('should not prematurely unlock when multiple Dropdowns share the same scroll parent', async () => {
+    const scrollParentEl = document.createElement('div')
+    scrollParentEl.style.overflow = 'auto'
+
+    const dropdown1 = document.createElement('div')
+    const dropdown2 = document.createElement('div')
+    document.body.appendChild(scrollParentEl)
+    scrollParentEl.appendChild(dropdown1)
+    scrollParentEl.appendChild(dropdown2)
+
+    mockedGetScrollParent.mockReturnValue(scrollParentEl)
+
+    const { unmount } = render(
+      <>
+        <Dropdown>
+          <Dropdown.Item title='A' key='a'>
+            a-content
+          </Dropdown.Item>
+        </Dropdown>
+        <Dropdown>
+          <Dropdown.Item title='B' key='b'>
+            b-content
+          </Dropdown.Item>
+        </Dropdown>
+      </>
+    )
+
+    // 打开第一个 Dropdown
+    fireEvent.click(screen.getByText('A'))
+    await waitFor(() => {
+      expect(screen.getByText('a-content')).toBeVisible()
+    })
+    expect(scrollParentEl.style.overflow).toBe('hidden')
+
+    // 打开第二个 Dropdown（共享同一 scroll parent）
+    fireEvent.click(screen.getByText('B'))
+    await waitFor(() => {
+      expect(screen.getByText('b-content')).toBeVisible()
+    })
+    // 仍为 hidden（引用计数 = 2）
+    expect(scrollParentEl.style.overflow).toBe('hidden')
+
+    // 关闭第一个 Dropdown，不应提前解锁
+    fireEvent.click(screen.getByText('A'))
+    await waitFor(() => {
+      expect(screen.getByText('a-content')).not.toBeVisible()
+    })
+    // 仍为 hidden（引用计数 = 1）
+    expect(scrollParentEl.style.overflow).toBe('hidden')
+
+    // 关闭第二个 Dropdown，计数归零，恢复原始 overflow
+    fireEvent.click(screen.getByText('B'))
+    await waitFor(() => {
+      expect(screen.getByText('b-content')).not.toBeVisible()
+    })
+    expect(scrollParentEl.style.overflow).toBe('auto')
+
+    unmount()
+    document.body.removeChild(scrollParentEl)
+    mockedGetScrollParent.mockRestore()
+  })
+
   describe('onVisibleChange', () => {
     test('should fire onVisibleChange when opening and closing', async () => {
       const onVisibleChange = jest.fn()
