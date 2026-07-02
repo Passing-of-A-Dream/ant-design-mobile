@@ -38,7 +38,7 @@ const defaultProps = {
 export const FloatingPanel = forwardRef<FloatingPanelRef, FloatingPanelProps>(
   (p, ref) => {
     const props = mergeProps(defaultProps, p)
-    const { anchors, placement = 'bottom' } = props
+    const { anchors, placement = 'bottom', inertiaFactor } = props
     const maxHeight = anchors[anchors.length - 1] ?? window.innerHeight
 
     const isBottomPlacement = placement !== 'top'
@@ -100,7 +100,7 @@ export const FloatingPanel = forwardRef<FloatingPanelRef, FloatingPanelProps>(
           setPulling(false)
           const [, vy] = state.velocity
           const [, dy] = state.direction
-          nextY = nearest(possibles, offsetY + dy * vy * props.inertiaFactor)
+          nextY = nearest(possibles, offsetY + dy * vy * (inertiaFactor ?? 0))
         }
         api.start({
           y: nextY,
