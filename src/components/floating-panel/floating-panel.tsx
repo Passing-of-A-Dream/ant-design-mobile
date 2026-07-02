@@ -27,10 +27,12 @@ export type FloatingPanelProps = {
   onHeightChange?: (height: number, animating: boolean) => void
   handleDraggingOfContent?: boolean
   placement?: 'bottom' | 'top'
+  inertiaFactor?: number
 } & NativeProps<'--border-radius' | '--z-index' | '--header-height'>
 
 const defaultProps = {
   handleDraggingOfContent: true,
+  inertiaFactor: 0,
 }
 
 export const FloatingPanel = forwardRef<FloatingPanelRef, FloatingPanelProps>(
@@ -96,7 +98,9 @@ export const FloatingPanel = forwardRef<FloatingPanelRef, FloatingPanelProps>(
         if (state.last) {
           pullingRef.current = false
           setPulling(false)
-          nextY = nearest(possibles, offsetY)
+          const [, vy] = state.velocity
+          const [, dy] = state.direction
+          nextY = nearest(possibles, offsetY + dy * vy * props.inertiaFactor)
         }
         api.start({
           y: nextY,

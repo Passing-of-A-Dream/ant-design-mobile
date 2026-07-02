@@ -1,7 +1,8 @@
-import React, { useRef, forwardRef } from 'react'
-import { render, testA11y, fireEvent, waitFor } from 'testing'
-import FloatingPanel, { FloatingPanelRef } from '..'
 import { reduceMotion, restoreMotion } from 'antd-mobile'
+import React, { forwardRef, useRef } from 'react'
+import { fireEvent, render, testA11y, waitFor } from 'testing'
+import FloatingPanel, { FloatingPanelRef } from '..'
+import { nearest } from '../../../utils/nearest'
 
 const classPrefix = `adm-floating-panel`
 
@@ -155,5 +156,29 @@ describe('FloatingPanel', () => {
     expect(panelEl.style.transform).toBe(
       `translateY(calc(100% + (-${anchors[1]}px)))`
     )
+  })
+})
+
+describe('FloatingPanel inertiaFactor logic', () => {
+  const possibles = anchors.map(x => -x) // [-100, -200, -400]
+
+  test('inertiaFactor=0 ignores velocity', () => {
+    expect(nearest(possibles, -120 + -1 * 1.5 * 0)).toBe(-100)
+  })
+
+  test('upward flick pushes snap toward higher anchor', () => {
+    expect(nearest(possibles, -120 + -1 * 1.5 * 50)).toBe(-200)
+  })
+
+  test('downward flick pushes snap toward lower anchor', () => {
+    expect(nearest(possibles, -280 + 1 * 1.5 * 100)).toBe(-100)
+  })
+
+  test('small inertiaFactor has minimal effect', () => {
+    expect(nearest(possibles, -120 + -1 * 1.5 * 5)).toBe(-100)
+  })
+
+  test('large inertiaFactor can skip to farthest anchor', () => {
+    expect(nearest(possibles, -120 + -1 * 1.5 * 200)).toBe(-400)
   })
 })
