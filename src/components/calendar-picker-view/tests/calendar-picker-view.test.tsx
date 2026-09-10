@@ -1,7 +1,8 @@
 import dayjs from 'dayjs'
 import MockDate from 'mockdate'
 import React, { useRef } from 'react'
-import { fireEvent, render, testA11y } from 'testing'
+import { act, fireEvent, render, testA11y } from 'testing'
+import { spyElementPrototype } from 'rc-util/lib/test/domHook'
 import CalendarPickerView, { CalendarPickerViewRef } from '..'
 import { convertPageToDayjs } from '../convert'
 
@@ -237,7 +238,7 @@ describe('Calendar', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('jumpTo keeps selected date in rendering range', () => {
+  test('jumpTo resets rendering range even when a date is selected', () => {
     const App = () => {
       const ref = useRef<CalendarPickerViewRef>(null)
       return (
@@ -270,6 +271,7 @@ describe('Calendar', () => {
   })
 
   test('jumpTo clamps to min/max when bounds are set', () => {
+    jest.useFakeTimers()
     const App = () => {
       const ref = useRef<CalendarPickerViewRef>(null)
       return (
@@ -288,6 +290,13 @@ describe('Calendar', () => {
           >
             jumpAfterMax
           </button>
+          <button
+            onClick={() => {
+              ref.current?.jumpTo({ year: 2023, month: 6 })
+            }}
+          >
+            jumpInBounds
+          </button>
           <CalendarPickerView
             ref={ref}
             selectionMode='single'
@@ -297,19 +306,54 @@ describe('Calendar', () => {
         </>
       )
     }
-    const { container, getByText } = render(<App />)
+    const { getByText } = render(<App />)
+
+    const spyScrollIntoView = jest.fn()
+    const spyHTMLElement = spyElementPrototype(
+      HTMLElement,
+      'scrollIntoView',
+      spyScrollIntoView
+    )
+
+    // Initial render scrolls to current month (2023-5)
+    act(() => {
+      jest.runAllTimers()
+    })
 
     // jumpTo before min should clamp to min month (2023-01)
     fireEvent.click(getByText('jumpBeforeMin'))
-    expect(
-      container.querySelector('[data-year-month="2023-1"]')
-    ).toBeInTheDocument()
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(spyScrollIntoView).toBeCalled()
+    const scrollCalls = spyScrollIntoView.mock.instances
+    expect(scrollCalls[scrollCalls.length - 1]).toHaveAttribute(
+      'data-year-month',
+      '2023-1'
+    )
 
     // jumpTo after max should clamp to max month (2023-12)
     fireEvent.click(getByText('jumpAfterMax'))
-    expect(
-      container.querySelector('[data-year-month="2023-12"]')
-    ).toBeInTheDocument()
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(scrollCalls[scrollCalls.length - 1]).toHaveAttribute(
+      'data-year-month',
+      '2023-12'
+    )
+
+    // jumpTo within bounds should scroll to target month (2023-6)
+    fireEvent.click(getByText('jumpInBounds'))
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(scrollCalls[scrollCalls.length - 1]).toHaveAttribute(
+      'data-year-month',
+      '2023-6'
+    )
+
+    spyHTMLElement.mockRestore()
+    jest.useRealTimers()
   })
 
   test('auto expand month list', () => {
