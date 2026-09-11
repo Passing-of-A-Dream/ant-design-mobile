@@ -73,6 +73,13 @@ export default function useMeasure(
         singleRowMeasureRef.current?.offsetHeight || 0
       const rowMeasureHeight = singleRowMeasureHeight * (rows + 0.5)
 
+      // Skip measurement when the element is not visible (e.g., inside a
+      // forceRender tab with display:none). Both heights will be 0, and
+      // committing to STABLE_NO_ELLIPSIS would cause a flicker once the
+      // element becomes visible. ResizeObserver will trigger startMeasure
+      // when real dimensions are available.
+      if (fullMeasureHeight === 0 && singleRowMeasureHeight === 0) return
+
       if (fullMeasureHeight <= rowMeasureHeight) {
         setStatus(MEASURE_STATUS.STABLE_NO_ELLIPSIS)
       } else {
