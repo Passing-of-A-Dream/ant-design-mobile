@@ -42,6 +42,11 @@ export default function useMeasure(
     MEASURE_STATUS.STABLE_NO_ELLIPSIS
   )
 
+  // Incremented each time startMeasure is called, so that the PREPARE
+  // effect re-runs even if status was already PREPARE (e.g., when
+  // ResizeObserver re-triggers measurement after element becomes visible).
+  const [measureVersion, setMeasureVersion] = React.useState(0)
+
   // ============================ Refs ============================
   const singleRowMeasureRef = React.useRef<HTMLDivElement>(null)
   const fullMeasureRef = React.useRef<HTMLDivElement>(null)
@@ -57,6 +62,7 @@ export default function useMeasure(
           ? Math.ceil(contentChars.length / 2)
           : contentChars.length,
       ])
+      setMeasureVersion(v => v + 1)
     })
   })
 
@@ -87,7 +93,7 @@ export default function useMeasure(
         setStatus(MEASURE_STATUS.MEASURE_WALKING)
       }
     }
-  }, [status])
+  }, [status, measureVersion])
 
   // Walking measure
   useLayoutEffect(() => {

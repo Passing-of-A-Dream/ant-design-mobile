@@ -196,21 +196,24 @@ test('should not commit to no-ellipsis when element is not visible', () => {
     configurable: true,
   })
 
-  const { getByTestId } = render(
-    <Ellipsis content={content} data-testid='ellipsis' />
-  )
-
-  // Should stay in measuring state (PREPARE), not commit to
-  // STABLE_NO_ELLIPSIS. Measure divs are aria-hidden.
-  const measureDivs = getByTestId('ellipsis').querySelectorAll('[aria-hidden]')
-  expect(measureDivs.length).toBeGreaterThan(0)
-
-  // Restore the spy mock from beforeAll
-  if (originalOffsetHeight) {
-    Object.defineProperty(
-      HTMLElement.prototype,
-      'offsetHeight',
-      originalOffsetHeight
+  try {
+    const { getByTestId } = render(
+      <Ellipsis content={content} data-testid='ellipsis' />
     )
+
+    // Should stay in measuring state (PREPARE), not commit to
+    // STABLE_NO_ELLIPSIS. Measure divs are aria-hidden.
+    const measureDivs =
+      getByTestId('ellipsis').querySelectorAll('[aria-hidden]')
+    expect(measureDivs.length).toBeGreaterThan(0)
+  } finally {
+    // Restore the spy mock from beforeAll
+    if (originalOffsetHeight) {
+      Object.defineProperty(
+        HTMLElement.prototype,
+        'offsetHeight',
+        originalOffsetHeight
+      )
+    }
   }
 })
